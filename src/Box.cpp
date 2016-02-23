@@ -13,6 +13,13 @@ Box::Box(int type, cv::Rect box)
 	
 }
 
+Box::Box(int type, cv::Rect box, int number)
+{
+	this->type = type;
+	this->bbox = box;
+	this->frameNO = number;
+}
+
 
 Box::Box(const Box& pBox)
 {

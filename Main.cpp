@@ -11,6 +11,7 @@
 #include "src\CompressiveTracking\RunCT.h"
 #include "src\Kernelized_Correlation_Filters\KCF.h"
 
+
 using namespace cv;
 using namespace std;
 
@@ -77,6 +78,7 @@ void doWork(struct Config config)
 	VJ_BS vj_bs;
 	HT ht;
 	OpenTLD tld;
+	
 	RunCT ct;
 	BS bs;
 	CC cc;
@@ -90,28 +92,6 @@ void doWork(struct Config config)
 	unsigned int rightCounter = 0;
 	
 
-	// nastavenie zdroja  
-	/*
-	switch (config.mode)
-	{
-	case IMAGE_SEQUENCE:
-	case VIDEO:
-		cout << "Opening source... " << endl;
-		cap.open(config.source);
-
-		if (!cap.isOpened())
-		{
-			cerr << "Cannot open source." << endl;
-			exit(1);
-		}
-		cout << "Done." << endl;
-		break;
-	case STREAM:
-		cout << "Streaming is not supported yet." << endl;
-		break;
-	}
-	*/
-
 	cout << "Opening source... " << endl;
 	cap.open(config.source);
 
@@ -122,7 +102,7 @@ void doWork(struct Config config)
 	}
 	cout << "Done." << endl;
 
-	//pMOG2 = new BackgroundSubtractorMOG2(0, 16, false); // povodne
+	
 	pMOG2 = new BackgroundSubtractorMOG2(0, 16.0, true);
 	// nastavenie detektora
 	switch (config.detector)
@@ -158,16 +138,23 @@ void doWork(struct Config config)
 		break;
 	}
 
-	
+	/* // pre prepisanie rovnakeho riadku v konzole
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
+	GetConsoleScreenBufferInfo(h, &bufferInfo);
+	*/
+	int size;
 
 	// hlavny cyklus 
 	while (1)
 	{
+		//SetConsoleCursorPosition(h, bufferInfo.dwCursorPosition);
 		frameCounter++;
 
 		
 		if (frameCounter % 100 == 0)
 			cout << frameCounter << ". frame"<< endl;
+		
 		
 
 		cap >> frame;
@@ -254,7 +241,7 @@ void doWork(struct Config config)
 		switch (config.tracker)
 		{
 		case TLD:
-		//for (unsigned int i = detector.box.size() - 1; i >= 0 && i < detector.box.size(); i--)
+			
 			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
 			{
 				boxes[i].setFrameNO(frameCounter);
@@ -268,6 +255,23 @@ void doWork(struct Config config)
 			tld.initTracking();
 			leftCounter = tld.getLeftCounter();
 			rightCounter = tld.getRightCounter();
+			
+			/* MOTLD */
+			/*
+			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
+			{
+				boxes[i].setFrameNO(frameCounter);
+				motld.addBox(boxes[i]);
+				boxes.pop_back();
+			}
+
+			motld.setFrames(frame, frameCounter, leftCounter, rightCounter);
+			if (!motld.initialised) motld.setTracker();
+			motld.track();
+			motld.initTracking();
+			leftCounter = motld.getLeftCounter();
+			rightCounter = motld.getRightCounter();
+			*/
 			break;
 		case CT:
 			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
@@ -318,14 +322,28 @@ void doWork(struct Config config)
 				Point(config.rightPoint, 0),
 				Point(config.rightPoint, frame.size().height),
 				Scalar(255, 0, 255),
-				2); // fialova			
+				2); // fialova	
 			break;
 		case HORIZONTAL:
-			// TO DO
+			line(frame,
+				Point(0, config.leftPoint),
+				Point(frame.size().height, config.leftPoint),
+				Scalar(0, 128, 255), // oranzova
+				2);
+			line(frame,
+				Point(0, config.middlePoint),
+				Point(frame.size().height, config.middlePoint),
+				Scalar(255, 128, 0),
+				2); // bledomodra
+			line(frame,
+				Point(0 ,config.rightPoint),
+				Point(frame.size().height, config.rightPoint),
+				Scalar(255, 0, 255),
+				2); // fialova	
 			break;
 		}
 			
-
+		
 
 		///// debugging
 		/*
@@ -347,7 +365,7 @@ void doWork(struct Config config)
 
 		imshow("People counter system", frame);
 		waitKey(1);
-		frame.release();
+		//frame.release();
 
 	}
 }

@@ -17,6 +17,7 @@ public:
 private:
 	CascadeClassifier _cascadeClassifier;
 	Mat _RGBframe;
+	Mat _BWframe;
 	int _line, _left, _middle, _right;
 	int _averageWidth, _averageHeight;
 	int _range;

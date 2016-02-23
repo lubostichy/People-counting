@@ -11,6 +11,7 @@ class Box
 public:
 	Box();
 	Box(int type, cv::Rect box);
+	Box(int type, cv::Rect box, int);
 	Box(const Box& pBox);
 	~Box();
 	void setFrameNO(int NO);

@@ -149,7 +149,7 @@ void RunKCF::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 < _middlePoint)
 		{
 			_leftCounter++;
-			//cout << _actualFrameNO << ", DOLAVA" << endl;
+			cout << _actualFrameNO << ", LEFT" << endl;
 		}
 
 		if (first->bbox.x + first->bbox.width / 2 < _middlePoint
@@ -157,7 +157,7 @@ void RunKCF::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 > _middlePoint)
 		{
 			_rightCounter++;
-			//cout << _actualFrameNO << ", DOPRAVA" << endl;
+			cout << _actualFrameNO << ", RIGHT" << endl;
 		}
 		break;
 	case HORIZONTAL:

@@ -65,7 +65,7 @@ private:
 	int _actualFrameNO;
 	unsigned int _leftCounter;
 	unsigned int _rightCounter;
-	vector <tld::TLD> _person;
+	vector <tld::TLD*> _person;
 	vector<Box> _detBox;
 	vector<Box> _trackBox;
 	

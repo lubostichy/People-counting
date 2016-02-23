@@ -119,44 +119,44 @@ void OpenTLD::initTracking()
 			//_person.push_back(*new tld::TLD(*tmp));		// deep copy
 			//delete tmp;
 			
-			_person.push_back(*new tld::TLD());
+			_person.push_back(new tld::TLD());
 			//_person.emplace_back();
 			
 			n = _person.size() - 1;
 			_ID++;
-			_person[n].ID = _ID;
-			_person[n].firstBox = new Box(COUNTER, _detBox[d].bbox);
-			_person[n].firstBox->setFrameNO(_actualFrameNO);
+			_person[n]->ID = _ID;
+			_person[n]->firstBox = new Box(COUNTER, _detBox[d].bbox);
+			_person[n]->firstBox->setFrameNO(_actualFrameNO);
 
 			Mat grey(img->height, img->width, CV_8UC1);
 			cvtColor(_frame, grey, CV_BGR2GRAY);			
 
-			_person[n].detectorCascade->imgWidth = grey.cols;
-			_person[n].detectorCascade->imgHeight = grey.rows;
-			_person[n].detectorCascade->imgWidthStep = grey.step;
-			_person[n].selectObject(grey, &_detBox[d].bbox);
+			_person[n]->detectorCascade->imgWidth = grey.cols;
+			_person[n]->detectorCascade->imgHeight = grey.rows;
+			_person[n]->detectorCascade->imgWidthStep = grey.step;
+			_person[n]->selectObject(grey, &_detBox[d].bbox);
 
-			_person[n].detectorCascade->varianceFilter->enabled = true;
-			_person[n].detectorCascade->ensembleClassifier->enabled = true;
-			_person[n].detectorCascade->nnClassifier->enabled = true;
+			_person[n]->detectorCascade->varianceFilter->enabled = true;
+			_person[n]->detectorCascade->ensembleClassifier->enabled = true;
+			_person[n]->detectorCascade->nnClassifier->enabled = true;
 
 			// classifier
-			_person[n].detectorCascade->useShift = true;
-			_person[n].detectorCascade->shift = 0.1;
-			_person[n].detectorCascade->minScale = -10;
-			_person[n].detectorCascade->maxScale = 10;
-			_person[n].detectorCascade->minSize = 25;
-			_person[n].detectorCascade->numTrees = 10;
-			_person[n].detectorCascade->numFeatures = 13;
+			_person[n]->detectorCascade->useShift = true;
+			_person[n]->detectorCascade->shift = 0.1;
+			_person[n]->detectorCascade->minScale = -10;
+			_person[n]->detectorCascade->maxScale = 10;
+			_person[n]->detectorCascade->minSize = 25;
+			_person[n]->detectorCascade->numTrees = 10;
+			_person[n]->detectorCascade->numFeatures = 13;
 
-			_person[n].detectorCascade->nnClassifier->thetaTP = 0.65;
-			_person[n].detectorCascade->nnClassifier->thetaFP = 0.5;
+			_person[n]->detectorCascade->nnClassifier->thetaTP = 0.65;
+			_person[n]->detectorCascade->nnClassifier->thetaFP = 0.5;
 
-			_person[n].detectorCascade->numFeatures = 13;
-			_person[n].detectorCascade->useShift = true;
+			_person[n]->detectorCascade->numFeatures = 13;
+			_person[n]->detectorCascade->useShift = true;
 
 
-			_person[n].skipProcessingOnce = false;
+			_person[n]->skipProcessingOnce = false;
 
 			ind.push_back(d);			
 			//cout << "Osoba ID " << person[person.size() - 1].ID << " bola vytvorena." << endl;
@@ -356,60 +356,60 @@ void OpenTLD::track()
 	for (unsigned int p = 0; p < _person.size(); p++)
 	{		
 		
-		if (!_person[p].skipProcessingOnce)
+		if (!_person[p]->skipProcessingOnce)
 		{
 			
-			_person[p].processImage(_frame);
+			_person[p]->processImage(_frame);
 		}
 		else
 		{
-			_person[p].skipProcessingOnce = false;
+			_person[p]->skipProcessingOnce = false;
 		}
 
 		// nasla sa detekcia
-		if (_person[p].currBB != NULL)
+		if (_person[p]->currBB != NULL)
 		{			
-			rectangle(_frame, *_person[p].currBB, Scalar(0, 0, 255), 2);
-			putText(_frame, to_string(_person[p].ID), Point(_person[p].currBB->x + 10,_person[p].currBB->y + _person[p].currBB->height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1);
+			rectangle(_frame, *_person[p]->currBB, Scalar(0, 0, 255), 2);
+			putText(_frame, to_string(_person[p]->ID), Point(_person[p]->currBB->x + 10,_person[p]->currBB->y + _person[p]->currBB->height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1);
 			tmpBox.frameNO = _actualFrameNO;
-			tmpBox.bbox = *_person[p].currBB;
+			tmpBox.bbox = *_person[p]->currBB;
 			_trackBox.push_back(tmpBox);
-			if (_person[p].lastBox != NULL) 
+			if (_person[p]->lastBox != NULL) 
 			{
-				if (isInArea(_person[p].lastBox))
+				if (isInArea(_person[p]->lastBox))
 				{
-					if (this->compareBoxes(tmpBox, *_person[p].lastBox, 1))
+					if (this->compareBoxes(tmpBox, *_person[p]->lastBox, 1))
 					{
-						_person[p].lost++;
-						if (_person[p].lost > 10)
+						_person[p]->lost++;
+						if (_person[p]->lost > 10)
 						{
-							counting(_person[p].firstBox, _person[p].lastBox);
+							counting(_person[p]->firstBox, _person[p]->lastBox);
 							inp.push_back(p);
 						}
 					}
 					else
 					{
-						_person[p].lost = 0;
+						_person[p]->lost = 0;
 					}
 				}
 				else
 				{
-					//_person[p].lastBox = new Box(_trackBox[_trackBox.size() - 1]);
-					counting(_person[p].firstBox, _person[p].lastBox);
+					//_person[p]->lastBox = new Box(_trackBox[_trackBox.size() - 1]);
+					counting(_person[p]->firstBox, _person[p]->lastBox);
 					inp.push_back(p);
 				}
 				
 				//this->person[p].lastBox->frameNO = trackBox[trackBox.size() - 1].frameNO;			
 			}
-			_person[p].lastBox = new Box(_trackBox[_trackBox.size() - 1]);
+			_person[p]->lastBox = new Box(_trackBox[_trackBox.size() - 1]);
 		}
 		else
 		{
 			
-			_person[p].lost++;
+			_person[p]->lost++;
 			//cout << this->person[p].lastBox->bbox.width << ' ' << this->person[p].lastBox->bbox.height << ' ' << this->person[p].lastBox->frameNO << endl;
 			
-			if (_person[p].lost > 10)
+			if (_person[p]->lost > 10)
 			{
 				// ulozim index				
 				inp.push_back(p);								
@@ -423,7 +423,7 @@ void OpenTLD::track()
 	// vymazem ulozene
 	for (vector<int>::size_type p = inp.size() - 1; p != (vector<int>::size_type) - 1; p--)
 	{
-		cout << "Mazem ososbu" << _person[inp[p]].ID << endl;
+		cout << "Mazem ososbu" << _person[inp[p]]->ID << endl;
 		_person.erase(_person.begin() + inp[p]);
 	}
 
