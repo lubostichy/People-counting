@@ -148,6 +148,7 @@ void RunCT::track()
 					_person[p].stay++;
 					if (_person[p].stay > 5)
 					{
+						counting(_person[p].firstBox, _person[p].lastBox);
 						inp.push_back(p);
 					}
 				}
@@ -231,6 +232,9 @@ bool RunCT::isInArea(Box *lastBox)
 			(lastBox->bbox.x + lastBox->bbox.width / 2 < _rightPoint));
 		break;
 	case HORIZONTAL:
+		return ((lastBox->bbox.y + lastBox->bbox.height / 2 > _leftPoint)
+			&&
+			(lastBox->bbox.y + lastBox->bbox.height / 2 < _rightPoint));
 		break;
 	}
 	return false;
@@ -260,7 +264,21 @@ void RunCT::counting(Box *first, Box *last)
 		}
 		break;
 	case HORIZONTAL:
-		// TO DO
+		if (first->bbox.y + first->bbox.height / 2 > _middlePoint
+			&&
+			last->bbox.y + last->bbox.height / 2 < _middlePoint)
+		{
+			_leftCounter++;
+			cout << _actualFrameNO << ",T" << endl;
+		}
+
+		if (first->bbox.y + first->bbox.height / 2 < _middlePoint
+			&&
+			last->bbox.y + last->bbox.height / 2 > _middlePoint)
+		{
+			_rightCounter++;
+			cout << _actualFrameNO << ",B" << endl;
+		}
 		break;
 	}
 

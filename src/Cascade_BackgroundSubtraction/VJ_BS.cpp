@@ -104,14 +104,14 @@ bool VJ_BS::isInArea(Rect rect)
 	switch (_line)
 	{
 	case VERTICAL:
-		return ((rect.x + rect.width / 2 > _left)
+		return ((rect.x + rect.width / 2 >= _left)
 			&&
-			(rect.x + rect.width / 2 < _right));
+			(rect.x + rect.width / 2 <= _right));
 		break;
 	case HORIZONTAL:
-		return ((rect.y + rect.height / 2 > _left)
+		return ((rect.y + rect.height / 2 >= _left)
 			&&
-			(rect.y + rect.height / 2 < _right));
+			(rect.y + rect.height / 2 <= _right));
 		break;
 	}
 	return false;

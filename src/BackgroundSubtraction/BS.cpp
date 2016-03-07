@@ -1,5 +1,6 @@
 #include "opencv2\opencv.hpp"
 #include "BS.h"
+#include "..\..\Main.h"
 
 using namespace cv;
 using namespace std;
@@ -14,12 +15,19 @@ BS::~BS()
 }
 
 
-void BS::setBS(int averageWidth, int averageHeight)
+void BS::setBS(struct Config config)
 {
 
-	_averageWidth = averageWidth;
-	_averageHeight = averageHeight;
-	//_range = 40;
+	//_averageWidth = averageWidth;
+	//_averageHeight = averageHeight;
+	_line = config.typeOfLine;
+	_left = config.leftPoint;
+	_middle = config.middlePoint;
+	_right = config.rightPoint;
+	_minWidth = config.minWidthBox;
+	_maxWidth = config.maxWidthBox;
+	_minHeight = config.minHeightBox;
+	_maxHeight = config.maxHeightBox;
 }
 
 void BS::detect()
@@ -103,7 +111,7 @@ void BS::findBoundingBoxes()
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
 		boundRect[i] = boundingRect(Mat(contours_poly[i]));
 		boundRect[i] = enlargeRect(boundRect[i], 2.5, 2);
-		if ((boundRect[i].width > _averageWidth) && (boundRect[i].height > _averageHeight))
+		if ((boundRect[i].width > _minWidth) && (boundRect[i].height > _minHeight))
 		{
 			rectangle(_RGBframe, boundRect[i], Scalar(255, 0, 0));
 			boundingBoxes.push_back(boundRect[i]);
@@ -135,11 +143,14 @@ void BS::setFrames(Mat BWframe, Mat RGBframe)
 
 bool BS::isGoodSize(Rect rect)
 {
-	
+	/*
 	return (((_averageWidth + _averageWidth * 0.2) > rect.width) && (rect.width > (_averageWidth - _averageWidth * 0.3))
 		&&
 		((_averageHeight + _averageHeight * 0.2) > rect.height) && (rect.height > (_averageHeight - _averageHeight * 0.2)));
-
+		*/
+	return (_minWidth < rect.width && rect.width < _maxWidth)
+		&&
+		(_minHeight < rect.height && rect.height < _maxHeight);
 }
 
 /*

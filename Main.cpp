@@ -108,7 +108,7 @@ void doWork(struct Config config)
 	switch (config.detector)
 	{
 	case MOVEMENT:
-		bs.setBS(config.widthOfBox, config.heightOfBox);
+		bs.setBS(config);
 		break;
 	case MOVEMENT_CASCADE:
 		vj_bs.setVJ_BS(config);
@@ -119,11 +119,11 @@ void doWork(struct Config config)
 		//pMOG2 = new BackgroundSubtractorMOG2(0, 64, false);
 		break;
 	case HOUGH_TRANSFORM:		
-		ht.setDetector(config.widthOfBox, config.heightOfBox, config.typeOfLine, config.leftPoint, config.rightPoint);
+		ht.setDetector(config);
 		break;
 	case MOVEMENT_HOUGH_TRANSFORM:
-		bs.setBS(config.widthOfBox, config.heightOfBox);
-		ht.setDetector(config.widthOfBox, config.heightOfBox, config.typeOfLine, config.leftPoint, config.rightPoint);
+		bs.setBS(config);
+		ht.setDetector(config);
 		break;
 	}
 
@@ -332,11 +332,20 @@ void doWork(struct Config config)
 		*/
 		/////
 
-		putText(frame, to_string(leftCounter), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-		putText(frame, to_string(rightCounter), Point(frame.size().width - 20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-			
+		switch (config.typeOfLine)
+		{
+		case VERTICAL:
+			putText(frame, to_string(leftCounter), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(rightCounter), Point(frame.size().width - 20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			break;
+		case HORIZONTAL:
+			putText(frame, to_string(leftCounter), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(rightCounter), Point(20, frame.size().height - 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			break;
+		}
+		
 		/*
-		string rawname = "menza";
+		string rawname = "vratnica";
 		char filename[280];
 		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/rgb/%d.png", rawname.c_str(), frameCounter);
 

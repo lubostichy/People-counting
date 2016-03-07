@@ -15,7 +15,7 @@ HT::~HT()
 {
 }
 
-void HT::setDetector(int width, int height, int line, int left, int right)
+void HT::setDetector(struct Config config)// (int width, int height, int line, int left, int right)
 {
 	PatchSize = 16; // 16
 
@@ -39,9 +39,9 @@ void HT::setDetector(int width, int height, int line, int left, int right)
 
 	forest_path = "pedestrian.dat";
 
-	BBoxWidth = width * koef; //50
+	BBoxWidth = (config.maxWidthBox + config.minWidthBox) / 2 * koef; //50
 
-	BBoxHeight = height * koef; // 100
+	BBoxHeight = (config.maxHeightBox + config.minHeightBox) / 2 * koef; // 100
 
 	HalfBBoxWidth = BBoxWidth / 1.5; // 30
 
@@ -54,9 +54,9 @@ void HT::setDetector(int width, int height, int line, int left, int right)
 		HalfBBoxWidth, HalfBBoxHeight,
 		iNumberOfScales, ResizeCoef);
 
-	_line = line;
-	_left = left;
-	_right = right;
+	_line = config.typeOfLine;
+	_left = config.leftPoint;
+	_right = config.rightPoint;
 }
 
 void HT::detect()

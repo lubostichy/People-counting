@@ -39,11 +39,26 @@ void CC::detect()
 {
 	vector <Rect> people;
 	
-	//cvtColor(_RGBframe, _BWframe, CV_BGR2GRAY);
-	//equalizeHist(_BWframe, _BWframe);
 	
-	_cascadeClassifier.detectMultiScale(_RGBframe, people, 1.5, 3, 0 );
-//	_cascadeClassifier.detectMultiScale(_BWframe, people, 1.3, 3, 0 | CV_HAAR_SCALE_IMAGE); //, Size(30, 30), Size(600, 600));
+	
+	// HAAR	
+	/*
+	cvtColor(_RGBframe, _BWframe, CV_BGR2GRAY);
+	equalizeHist(_BWframe, _BWframe);
+	_cascadeClassifier.detectMultiScale(_BWframe, people, 1.3, 3, 0 | CV_HAAR_SCALE_IMAGE, Size(50, 50), Size(300, 300)); // HAAR
+
+	for (unsigned int i = 0; i < people.size(); i++)
+	{
+		people[i] = decreaseRect(people[i], 0.5, 0.5);
+		rectangle(_RGBframe, people[i], Scalar(0,255,0), 2);
+		boxes.push_back(Box(DETECTOR, people[i]));
+	}
+	*/
+
+	// HOG
+	
+	_cascadeClassifier.detectMultiScale(_RGBframe, people, 1.5, 3, 0); // HOG
+	
 	for (unsigned int i = 0; i < people.size(); i++)
 	{	
 		if (isInArea(people[i]))
@@ -60,6 +75,8 @@ void CC::detect()
 			}
 		}
 	}
+	
+	
 	people.clear();
 }
 
@@ -73,9 +90,9 @@ bool CC::isInArea(Rect rect)
 			(rect.x + rect.width / 2 <= _right));
 		break;
 	case HORIZONTAL:
-		return ((rect.y + rect.height / 2 > _left)
+		return ((rect.y + rect.height / 2 >= _left)
 			&&
-			(rect.y + rect.height / 2 < _right));
+			(rect.y + rect.height / 2 <= _right));
 		break;
 	}
 	return false;

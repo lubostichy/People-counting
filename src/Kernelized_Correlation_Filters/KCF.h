@@ -34,7 +34,7 @@ private:
 	unsigned int _leftCounter;
 	unsigned int _rightCounter;
 
-	bool isInArea(KCFTracker);
+	bool isInArea(Box*);
 	void counting(Box*, Box*);	
 	bool compareBoxes(Box, Box, int);
 	

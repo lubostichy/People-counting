@@ -50,7 +50,7 @@ public:
 	vector <Box> boxes;
 	
 
-	void setDetector(int, int, int, int, int);
+	void setDetector(struct Config);
 
 	void detect();
 	void detect(Rect rect);
