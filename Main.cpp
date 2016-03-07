@@ -55,11 +55,11 @@ int main(int argc, char** argv)
 	printConfig(config);
 
 	cout << "Counting..." << endl;
-	cout << "==============================" << endl;
+	cout << "============================================================" << endl;
 
 	doWork(config);
 
-	cout << "==============================" << endl;
+	cout << "============================================================" << endl;
 	cout << "Counting is done." << endl;
 	//cout << "Press enter..." << endl;
 	//getchar();
@@ -111,30 +111,32 @@ void doWork(struct Config config)
 		bs.setBS(config.widthOfBox, config.heightOfBox);
 		break;
 	case MOVEMENT_CASCADE:
-		//pMOG2 = new BackgroundSubtractorMOG2(0, 16, false);	// povodne !
-		//pMOG2 = new BackgroundSubtractorMOG2(0, 64, false);
+		vj_bs.setVJ_BS(config);
 		break;
 	case CASCADE:
 		//cc.setCC(config.widthOfBox, config.heightOfBox, config.cascadeClassifier, config.typeOfLine, config.leftPoint, config.middlePoint, config.rightPoint);
 		cc.setCC(config);
 		//pMOG2 = new BackgroundSubtractorMOG2(0, 64, false);
 		break;
-	case HOUGH_TRANSFORM:
+	case HOUGH_TRANSFORM:		
+		ht.setDetector(config.widthOfBox, config.heightOfBox, config.typeOfLine, config.leftPoint, config.rightPoint);
+		break;
+	case MOVEMENT_HOUGH_TRANSFORM:
 		bs.setBS(config.widthOfBox, config.heightOfBox);
-		ht.setDetector();
+		ht.setDetector(config.widthOfBox, config.heightOfBox, config.typeOfLine, config.leftPoint, config.rightPoint);
 		break;
 	}
 
 	switch (config.tracker)
 	{
 	case TLD:
-		tld.setCounter(config.typeOfLine, config.leftPoint, config.middlePoint, config.rightPoint);
+		tld.setCounter(config);
 		break;
 	case CT:
-		ct.setCounter(config.typeOfLine, config.leftPoint, config.middlePoint, config.rightPoint);
+		ct.setCounter(config);
 		break;
 	case KCF:
-		kcf.setCounter(config.typeOfLine, config.leftPoint, config.middlePoint, config.rightPoint);
+		kcf.setCounter(config);
 		break;
 	}
 
@@ -144,6 +146,8 @@ void doWork(struct Config config)
 	GetConsoleScreenBufferInfo(h, &bufferInfo);
 	*/
 	int size;
+	Mat data;
+	Mat plot_result;
 
 	// hlavny cyklus 
 	while (1)
@@ -151,10 +155,10 @@ void doWork(struct Config config)
 		//SetConsoleCursorPosition(h, bufferInfo.dwCursorPosition);
 		frameCounter++;
 
-		
+		/*
 		if (frameCounter % 100 == 0)
 			cout << frameCounter << ". frame"<< endl;
-		
+		*/
 		
 
 		cap >> frame;
@@ -177,8 +181,7 @@ void doWork(struct Config config)
 			boxes = bs.boxes;
 			bs.boxes.clear();
 			break;
-		case MOVEMENT_CASCADE:
-			vj_bs.setVJ_BS(config.cascadeClassifier, config.widthOfBox);
+		case MOVEMENT_CASCADE:			
 			vj_bs.setFrames(fgmask, frame);
 			vj_bs.detect();
 			boxes = vj_bs.boxes;
@@ -191,45 +194,34 @@ void doWork(struct Config config)
 			cc.boxes.clear();
 			break;
 		case HOUGH_TRANSFORM:
-			bs.setFrames(fgmask, frame);
-			bs.detect(); // detekuje pohyb
 			ht.setRGBFrame(frame);
-			
-			// na kazdom boxe pohybu sa detekuje osoba
-			for (unsigned int i = 0; i < bs.boxes.size(); i++)
+			ht.detect();
+			boxes = ht.boxes;
+			for (unsigned int i = 0; i < boxes.size(); i++)
 			{
-				/*
-				cout << "in " <<
-					frameCounter << " [" <<
-					bs.boxes[i].bbox.x << ", " <<
-					bs.boxes[i].bbox.y << ", " <<
-					bs.boxes[i].bbox.width << ", " <<
-					bs.boxes[i].bbox.height << "]"
-					<< endl;
-					*/
-
-				//rectangle(frame, bs.boxes[i].bbox, Scalar(255, 0, 0), 2);
-				// detekcia osoby
-				ht.detect(bs.boxes[i].bbox);
-
+				rectangle(frame, boxes[i].bbox, Scalar(0, 255, 0), 2);
 			}
+			ht.boxes.clear();
+			break;
+		case MOVEMENT_HOUGH_TRANSFORM:
+			bs.setFrames(fgmask, frame);
+			bs.findBoundingBoxes();
+			//bs.detect(); // detekuje pohyb
+			ht.setRGBFrame(frame);
 
-			// boxy detekcie osoby
-			for (unsigned int i = 0; i < ht.boxes.size(); i++)
+			// na kazdom boxe pohybu sa detekuje osoba
+			for (unsigned int i = 0; i < bs.boundingBoxes.size(); i++)
 			{
-				/*
-				cout << "out " <<
-					frameCounter << " [" <<
-					ht.boxes[i].bbox.x << ", " <<
-					ht.boxes[i].bbox.y << ", " <<
-					ht.boxes[i].bbox.width << ", " <<
-					ht.boxes[i].bbox.height << "]"
-					<< endl;
-					*/
-				rectangle(frame, ht.boxes[i].bbox, Scalar(0, 0, 255),3);
+				ht.detect(bs.boundingBoxes[i]);
+			}
+			boxes = ht.boxes;
+			// boxy detekcie osoby
+			for (unsigned int i = 0; i < boxes.size(); i++)
+			{
+				rectangle(frame, boxes[i].bbox, Scalar(0, 255, 0), 2);
 			}
 			ht.gd.boxes.clear();
-			bs.boxes.clear();
+			bs.boundingBoxes.clear();
 
 			break;
 		}
@@ -256,22 +248,6 @@ void doWork(struct Config config)
 			leftCounter = tld.getLeftCounter();
 			rightCounter = tld.getRightCounter();
 			
-			/* MOTLD */
-			/*
-			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
-			{
-				boxes[i].setFrameNO(frameCounter);
-				motld.addBox(boxes[i]);
-				boxes.pop_back();
-			}
-
-			motld.setFrames(frame, frameCounter, leftCounter, rightCounter);
-			if (!motld.initialised) motld.setTracker();
-			motld.track();
-			motld.initTracking();
-			leftCounter = motld.getLeftCounter();
-			rightCounter = motld.getRightCounter();
-			*/
 			break;
 		case CT:
 			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
@@ -327,17 +303,17 @@ void doWork(struct Config config)
 		case HORIZONTAL:
 			line(frame,
 				Point(0, config.leftPoint),
-				Point(frame.size().height, config.leftPoint),
+				Point(frame.size().width, config.leftPoint),
 				Scalar(0, 128, 255), // oranzova
 				2);
 			line(frame,
 				Point(0, config.middlePoint),
-				Point(frame.size().height, config.middlePoint),
+				Point(frame.size().width, config.middlePoint),
 				Scalar(255, 128, 0),
 				2); // bledomodra
 			line(frame,
 				Point(0 ,config.rightPoint),
-				Point(frame.size().height, config.rightPoint),
+				Point(frame.size().width, config.rightPoint),
 				Scalar(255, 0, 255),
 				2); // fialova	
 			break;
@@ -346,14 +322,10 @@ void doWork(struct Config config)
 		
 
 		///// debugging
+		
+		
+
 		/*
-		string rawname = "ht_kastiel";
-		char filename[280];
-		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/rgb/%d.png", rawname.c_str(), frameCounter);
-
-		imwrite(filename, frame);
-
-
 		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/bw/%d.png", rawname.c_str(), frameCounter);
 		//cout << filename << endl;
 		imwrite(filename, fgmask);
@@ -362,10 +334,18 @@ void doWork(struct Config config)
 
 		putText(frame, to_string(leftCounter), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 		putText(frame, to_string(rightCounter), Point(frame.size().width - 20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			
+		/*
+		string rawname = "menza";
+		char filename[280];
+		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/rgb/%d.png", rawname.c_str(), frameCounter);
 
-		imshow("People counter system", frame);
+		imwrite(filename, frame);
+		*/
+
+		imshow("People passing through a door counter", frame);
 		waitKey(1);
-		//frame.release();
+		frame.release();
 
 	}
 }
@@ -392,31 +372,9 @@ struct Config getConfig(char** argv)
 		cerr << "Error: Wrong path to config." << endl;
 		config.ok = false;
 		return config;
-	}
-	// mod
-	getline(file, line);
-	getline(file, line);
-	if (!line.compare("IMAGE_SEQUENCE"))
-	{
-		config.mode = IMAGE_SEQUENCE;
-	}
-	else if (!line.compare("VIDEO"))
-	{
-		config.mode = VIDEO;
-	}
-	else if (!line.compare("STREAM"))
-	{
-		config.mode = STREAM;
-	}
-	else
-	{
-		cerr << "Error: Wrong mode." << endl;
-		config.ok = false;
-		return config;
-	}
+	}	
 
 	// cesta k zdroju
-	getline(file, line);
 	getline(file, line);
 	getline(file, line);
 	config.source = line;
@@ -440,6 +398,10 @@ struct Config getConfig(char** argv)
 	else if (!line.compare("HOUGH_TRANSFORM"))
 	{
 		config.detector = HOUGH_TRANSFORM;
+	}
+	else if (!line.compare("MOVEMENT_HOUGH_TRANSFORM"))
+	{
+		config.detector = MOVEMENT_HOUGH_TRANSFORM;
 	}
 	else
 	{
@@ -538,20 +500,43 @@ struct Config getConfig(char** argv)
 	getline(file, line);
 	
 	
-	result = sscanf(line.c_str(), "%d", &config.widthOfBox);
+	result = sscanf(line.c_str(), "%d", &config.minWidthBox);
 	if (result == EOF)
 	{
 		config.ok = false;
 		return config;
 	}
 	 
+	getline(file, line);
+	getline(file, line);
+	getline(file, line);
+
+
+	result = sscanf(line.c_str(), "%d", &config.maxWidthBox);
+	if (result == EOF)
+	{
+		config.ok = false;
+		return config;
+	}
 
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
 
 	
-	result = sscanf(line.c_str(), "%d", &config.heightOfBox);
+	result = sscanf(line.c_str(), "%d", &config.minHeightBox);
+	if (result == EOF)
+	{
+		config.ok = false;
+		return config;
+	}
+
+	getline(file, line);
+	getline(file, line);
+	getline(file, line);
+
+
+	result = sscanf(line.c_str(), "%d", &config.maxHeightBox);
 	if (result == EOF)
 	{
 		config.ok = false;
@@ -569,22 +554,25 @@ struct Config getConfig(char** argv)
 
 void printConfig(struct Config config)
 {
-	cout << "=========== CONFIG ===========" << endl;
+	cout << "======================= CONFIG =======================" << endl;
 	cout << "Source: \t" << config.source << endl;
 
 	cout << "Detection: \t";
 	switch (config.detector) {
 	case MOVEMENT:
-		cout << "Only movement" << endl;
+		cout << "Only movement detection" << endl;
 		break;
 	case CASCADE:
 		cout << "Only cascade - " << config.cascadeClassifier << endl;
 		break;
 	case MOVEMENT_CASCADE:
-		cout << "Movement with cascade - " << config.cascadeClassifier << endl;
+		cout << "Movement detection with cascade - " << config.cascadeClassifier << endl;
 		break;
 	case HOUGH_TRANSFORM:
 		cout << "Hough transform" << endl;
+		break;
+	case MOVEMENT_HOUGH_TRANSFORM:
+		cout << "Hough transform with movement detection" << endl;
 		break;
 	}
 
@@ -601,7 +589,7 @@ void printConfig(struct Config config)
 		break;
 	}
 
-	cout << "Box: \t\t" << config.widthOfBox << "x" << config.heightOfBox << endl;
-
-	cout << "==============================" << endl;
+	cout << "Width box: \t" << config.minWidthBox << " < " << "width box" << " < " << config.maxWidthBox << endl;
+	cout << "Height box: \t" << config.minHeightBox << " < " << "height box" << " < " << config.maxHeightBox << endl;
+	cout << "=====================================================" << endl;
 }

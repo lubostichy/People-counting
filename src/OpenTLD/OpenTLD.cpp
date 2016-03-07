@@ -306,12 +306,12 @@ bool OpenTLD::findBox(tld::TLD person, Box detBox)
 }
 */
 
-void OpenTLD::setCounter(int type, int left, int middle, int right)
+void OpenTLD::setCounter(struct Config config)
 {
-	_countingType = type;
-	_leftPoint = left;
-	_middlePoint = middle;
-	_rightPoint = right;
+	_countingType = config.typeOfLine;
+	_leftPoint = config.leftPoint;
+	_middlePoint = config.middlePoint;
+	_rightPoint = config.rightPoint;
 }
 
 void OpenTLD::counting(Box *first, Box *last)
@@ -324,7 +324,7 @@ void OpenTLD::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 < _middlePoint)
 		{
 			_leftCounter++;
-			cout << _actualFrameNO << ". LEFT" << endl;
+			cout << _actualFrameNO << ",L" << endl;
 		}
 
 		if (first->bbox.x + first->bbox.width / 2 < _middlePoint
@@ -332,7 +332,7 @@ void OpenTLD::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 > _middlePoint)
 		{
 			_rightCounter++;
-			cout << _actualFrameNO << ". RIGHT" << endl;
+			cout << _actualFrameNO << ",R" << endl;
 		}
 		break;
 	case HORIZONTAL:
@@ -370,7 +370,7 @@ void OpenTLD::track()
 		if (_person[p]->currBB != NULL)
 		{			
 			rectangle(_frame, *_person[p]->currBB, Scalar(0, 0, 255), 2);
-			putText(_frame, to_string(_person[p]->ID), Point(_person[p]->currBB->x + 10,_person[p]->currBB->y + _person[p]->currBB->height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1);
+			putText(_frame, to_string(_person[p]->ID), Point(_person[p]->currBB->x + 10,_person[p]->currBB->y + _person[p]->currBB->height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
 			tmpBox.frameNO = _actualFrameNO;
 			tmpBox.bbox = *_person[p]->currBB;
 			_trackBox.push_back(tmpBox);
@@ -380,8 +380,8 @@ void OpenTLD::track()
 				{
 					if (this->compareBoxes(tmpBox, *_person[p]->lastBox, 1))
 					{
-						_person[p]->lost++;
-						if (_person[p]->lost > 10)
+						_person[p]->stay++;
+						if (_person[p]->stay > 5)
 						{
 							counting(_person[p]->firstBox, _person[p]->lastBox);
 							inp.push_back(p);
@@ -389,7 +389,7 @@ void OpenTLD::track()
 					}
 					else
 					{
-						_person[p]->lost = 0;
+						_person[p]->stay = 0;
 					}
 				}
 				else
@@ -411,7 +411,9 @@ void OpenTLD::track()
 			
 			if (_person[p]->lost > 10)
 			{
-				// ulozim index				
+				// ulozim index	
+				if (_person[p]->lastBox != NULL)
+					counting(_person[p]->firstBox, _person[p]->lastBox);
 				inp.push_back(p);								
 
 			}
@@ -423,7 +425,7 @@ void OpenTLD::track()
 	// vymazem ulozene
 	for (vector<int>::size_type p = inp.size() - 1; p != (vector<int>::size_type) - 1; p--)
 	{
-		cout << "Mazem ososbu" << _person[inp[p]]->ID << endl;
+		//cout << "Mazem ososbu" << _person[inp[p]]->ID << endl;
 		_person.erase(_person.begin() + inp[p]);
 	}
 
@@ -437,7 +439,7 @@ void OpenTLD::track()
 			{
 				if (_detBox[d].frameNO == _trackBox[t].frameNO)
 				{
-					if (compareBoxes(_detBox[d], _trackBox[t], 20))
+					if (compareBoxes(_detBox[d], _trackBox[t], 40)) // 20
 					{
 						//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
 
@@ -477,10 +479,11 @@ bool OpenTLD::isInArea(Box *lastBox)
 
 	switch (_countingType)
 	{
-	case VERTICAL:		
+	case VERTICAL:	
+		
 		return ((lastBox->bbox.x + lastBox->bbox.width / 2 > _leftPoint)
 			&&
-			(lastBox->bbox.x + lastBox->bbox.width / 2 < _rightPoint));
+			(lastBox->bbox.x + lastBox->bbox.width / 2 < _rightPoint));				
 		break;
 	case HORIZONTAL:
 		break;

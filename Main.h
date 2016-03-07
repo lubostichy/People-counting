@@ -11,16 +11,6 @@ struct Config getConfig(char**);
 void printConfig(struct Config);
 void doWork(struct Config);
 
-/* postupnost obrazkov */
-const int IMAGE_SEQUENCE = 1;
-
-/* video */
-const int VIDEO = 2;
-
-/* kamera */
-const int STREAM = 3;
-
-
 const int VERTICAL = 1;
 const int HORIZONTAL = 2;
 
@@ -66,7 +56,11 @@ struct Config {
 	int middlePoint;
 	int rightPoint;
 	string cascadeClassifier;
+	int minWidthBox;
+	int maxWidthBox;
 	int widthOfBox;
+	int minHeightBox;
+	int maxHeightBox;
 	int heightOfBox;
 	// TO DO: + tresholdy
 };

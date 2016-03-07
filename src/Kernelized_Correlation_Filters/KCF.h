@@ -17,7 +17,7 @@ public:
 	void setFrames(Mat, int, int, int);
 	void addBox(Box);
 	void initTracking();
-	void setCounter(int, int, int, int);
+	void setCounter(struct Config);
 	unsigned int getLeftCounter();
 	unsigned int getRightCounter();
 private:

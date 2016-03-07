@@ -80,7 +80,7 @@ void RunCT::initTracking()
 			_person[n].currBB = _detBox[d].bbox;
 			_person[n].firstBox = new Box(TRACKER, _detBox[d].bbox);			
 			_person[n].init(_BWframe, _person[n].currBB);
-			cout << "vytvorena: " << _person[n].ID << ", " << _person[n].firstBox->bbox.x << endl;
+			
 			ind.push_back(d);
 		}
 	}
@@ -131,7 +131,7 @@ void RunCT::track()
 		
 		
 		
-		rectangle(_frame, tmpBox.bbox, Scalar(0, 255, 0), 2);
+		rectangle(_frame, tmpBox.bbox, Scalar(0, 0, 255), 2);
 		putText(_frame, std::to_string(_person[p].ID), Point(_person[p].currBB.x + 10, _person[p].currBB.y + _person[p].currBB.height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
 		_trackBox.push_back(tmpBox);
 		
@@ -140,25 +140,25 @@ void RunCT::track()
 		if (_person[p].lastBox != NULL)
 		{
 			
-			if (isInArea(_person[p]))
+			if (isInArea(_person[p].lastBox))
 			{
 
 				if (this->compareBoxes(*_person[p].lastBox, tmpBox, 1))
 				{
-					_person[p].lost++;
-					if (_person[p].lost > 5)
+					_person[p].stay++;
+					if (_person[p].stay > 5)
 					{
 						inp.push_back(p);
 					}
 				}
 				else
 				{
-					_person[p].lost = 0;
+					_person[p].stay = 0;
 				}
 			}
 			else
 			{				
-				cout << "ratam: " << _person[p].ID << ", " << _person[p].firstBox->bbox.x << endl;
+				
 				counting(_person[p].firstBox, _person[p].lastBox);
 				inp.push_back(p);
 			}
@@ -221,14 +221,14 @@ void RunCT::track()
 
 }
 
-bool RunCT::isInArea(CompressiveTracker person)
+bool RunCT::isInArea(Box *lastBox)
 {
 	switch (_countingType)
 	{
 	case VERTICAL:
-		return ((person.lastBox->bbox.x + person.lastBox->bbox.width / 2 > _leftPoint)
+		return ((lastBox->bbox.x + lastBox->bbox.width / 2 > _leftPoint)
 			&&
-			(person.lastBox->bbox.x + person.lastBox->bbox.width / 2 < _rightPoint));
+			(lastBox->bbox.x + lastBox->bbox.width / 2 < _rightPoint));
 		break;
 	case HORIZONTAL:
 		break;
@@ -248,7 +248,7 @@ void RunCT::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 < _middlePoint)
 		{
 			_leftCounter++;
-			//cout << _actualFrameNO << ", DOLAVA" << endl;
+			cout << _actualFrameNO << ",L" << endl;
 		}
 
 		if (first->bbox.x + first->bbox.width / 2 < _middlePoint
@@ -256,7 +256,7 @@ void RunCT::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 > _middlePoint)
 		{
 			_rightCounter++;
-			//cout << _actualFrameNO << ", DOPRAVA" << endl;
+			cout << _actualFrameNO << ",R" << endl;
 		}
 		break;
 	case HORIZONTAL:
@@ -266,12 +266,12 @@ void RunCT::counting(Box *first, Box *last)
 
 }
 
-void RunCT::setCounter(int type, int leftPoint, int midPoint, int rightPoint)
+void RunCT::setCounter(struct Config config)
 {
-	_countingType = type;
-	_leftPoint = leftPoint;
-	_middlePoint = midPoint;
-	_rightPoint = rightPoint;
+	_countingType = config.typeOfLine;
+	_leftPoint = config.leftPoint;
+	_middlePoint = config.middlePoint;
+	_rightPoint = config.rightPoint;
 }
 
 

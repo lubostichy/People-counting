@@ -48,7 +48,7 @@ public:
 	void addBox(Box box);
 	void initTracking();	
 	//bool findBox(tld::TLD person, Box detBox);
-	void setCounter(int, int, int, int);
+	void setCounter(struct Config);
 	int getLeftCounter();
 	int getRightCounter();
 private:	

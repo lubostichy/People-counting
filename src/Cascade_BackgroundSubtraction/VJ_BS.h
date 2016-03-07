@@ -17,15 +17,22 @@ public:
 	std::vector <Box> boxes;
 	void detect();
 	void setFrames(Mat, Mat);	
-	void setVJ_BS(string, int);
-
+	void setVJ_BS(struct Config);
+	
 private:
-	Mat RGBframe;
-	Mat BWframe;
-	CascadeClassifier cascadeClassifier;
-	//std::string cascadeClassifier; // = "hogcascade_pedestrians.xml";
+	Mat _RGBframe;
+	Mat _BWframe;
+	CascadeClassifier _cascadeClassifier;
+	int _line, _left, _middle, _right;
+	int _minWidth, _maxWidth;
+	int _minHeight, _maxHeight;
+	//int _averageWidth, _averageHeight;
+	int _range;
+
 	vector<Rect> getBoundRects();
 	Rect enlargeRect(Rect, int, int);
 	Rect decreaseRect(Rect, float, float);
+	bool isInArea(Rect);
+	bool isGoodSize(Rect);
 };
 

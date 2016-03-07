@@ -14,7 +14,7 @@ public:
 	void track();
 	void initTracking();
 	void setFrames(cv::Mat, int, int, int);
-	void setCounter(int, int, int, int);
+	void setCounter(struct Config);
 	unsigned int getLeftCounter();	
 	unsigned int getRightCounter();
 private:
@@ -33,7 +33,7 @@ private:
 	int _rightPoint;
 	std::vector <CompressiveTracker> _person;
 
-	bool isInArea(CompressiveTracker);
+	bool isInArea(Box*);
 	void counting(Box*, Box*);
 	bool compareBoxes(Box, Box, int);
 	CompressiveTracker * newPerson(Box);

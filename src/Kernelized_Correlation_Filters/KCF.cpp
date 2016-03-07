@@ -42,15 +42,15 @@ void RunKCF::track()
 			{
 				if (compareBoxes(tmpBox, *_person[p].lastBox, 1))
 				{
-					_person[p].lost++;
-					if (_person[p].lost > 5)
+					_person[p].stay++;
+					if (_person[p].stay > 5)
 					{
 						inp.push_back(p);
 					}
 				}
 				else
 				{
-					_person[p].lost = 0;
+					_person[p].stay = 0;
 					//_person[p].lastBox = new Box(_trackBox[_trackBox.size() - 1]);
 				}
 			}
@@ -149,7 +149,7 @@ void RunKCF::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 < _middlePoint)
 		{
 			_leftCounter++;
-			cout << _actualFrameNO << ", LEFT" << endl;
+			cout << _actualFrameNO << ",L" << endl;
 		}
 
 		if (first->bbox.x + first->bbox.width / 2 < _middlePoint
@@ -157,7 +157,7 @@ void RunKCF::counting(Box *first, Box *last)
 			last->bbox.x + last->bbox.width / 2 > _middlePoint)
 		{
 			_rightCounter++;
-			cout << _actualFrameNO << ", RIGHT" << endl;
+			cout << _actualFrameNO << ",R" << endl;
 		}
 		break;
 	case HORIZONTAL:
@@ -166,12 +166,12 @@ void RunKCF::counting(Box *first, Box *last)
 	}
 }
 
-void RunKCF::setCounter(int type, int leftPoint, int midPoint, int rightPoint)
+void RunKCF::setCounter(struct Config config)
 {
-	_countingType = type;
-	_leftPoint = leftPoint;
-	_middlePoint = midPoint;
-	_rightPoint = rightPoint;
+	_countingType = config.typeOfLine;
+	_leftPoint = config.leftPoint;
+	_middlePoint = config.middlePoint;
+	_rightPoint = config.rightPoint;
 }
 
 void RunKCF::addBox(Box box)

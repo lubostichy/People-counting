@@ -44,21 +44,30 @@ public:
 
 	string forest_path;
 
-	Mat RGBFrame;
-	Mat BWFrame;
+	
 
 	CGreedyDetection gd;
 	vector <Box> boxes;
+	
 
-	void setDetector();
+	void setDetector(int, int, int, int, int);
 
 	void detect();
 	void detect(Rect rect);
 
-	Rect HT::enlargeRect(Rect littleRect, int coefWidth, int coefHeight);
-
+	
 
 	void setRGBFrame(Mat frame);
 	void setBWFrame(Mat frame);
+
+private:
+	int _left;
+	int _right;
+	int _line;
+	Mat _RGBFrame;
+	Mat _BWFrame;
+
+	Rect enlargeRect(Rect littleRect, int coefWidth, int coefHeight);
+	bool isInArea(Rect);
 };
 
