@@ -1,18 +1,22 @@
-#pragma once
-
 #include <opencv2/opencv.hpp>
+#include <string>
 
-#define DETECTOR 1
-#define TRACKER 2
-#define COUNTER 3
+#ifndef BOX
+#define BOX
 
 class Box
 {
 public:
+
+	const int DETECTOR = 1;
+	const int TRACKER = 2;
+	const int COUNTER = 3;
+	
 	Box();
 	Box(int type, cv::Rect box);
 	Box(int type, cv::Rect box, int);
 	Box(const Box& pBox);
+	void operator=(const Box& pBox);
 	~Box();
 	void setFrameNO(int NO);
 	int type;
@@ -21,4 +25,6 @@ public:
 	std::string printBox();
 
 };
+
+#endif
 

@@ -1,63 +1,101 @@
 
 #include <iostream>
-#include "src\Cascade_BackgroundSubtraction\VJ_BS.h"
-#include "src\Cascade\CC.h"
-#include "src\HoughTransform\HT.h"
-#include "Main.h"
+//#include "src\Cascade_BackgroundSubtraction\VJ_BS.h"
+//#include "src\Cascade\CC.h"
+//#include "src\HoughTransform\HT.h"
+#include "Main.hpp"
 #include <opencv2\opencv.hpp>
-#include "src\OpenTLD\OpenTLD.h"
+//#include "src\OpenTLD\OpenTLD.h"
 #include "src\Box.h"
-#include "src\BackgroundSubtraction\BS.h"
-#include "src\CompressiveTracking\RunCT.h"
-#include "src\Kernelized_Correlation_Filters\KCF.h"
+//#include "src\BackgroundSubtraction\BS.h"
+//#include "src\CompressiveTracking\RunCT.h"
+//#include "src\Kernelized_Correlation_Filters\KCF.h"
+#include "src\Detectors.hpp"
+#include "src\Trackers.hpp"
 
 
 using namespace cv;
 using namespace std;
+
+/* 
+ * MAIN
+ */
+int main(int argc, char** argv)
+{
+	
+	/*
+	try 
+	{
+		ret = runMain(argc, argv);
+	}
+	catch (std::exception & e)
+	{
+		cout << "\033[1;31mA std::exception was raised:\033[0m " << e.what() <<  '\n';
+		ret = EXIT_FAILURE;
+		throw;
+	}
+	catch (...)
+	{
+		cout << "\033[1;31mAn unknown exception was raised\033[0m " << endl;
+		ret = EXIT_FAILURE; 
+		throw;
+	}
+	*/
+
+	if (argc == 2)
+	{
+		loadConfig(argv);
+	}
+	else
+	{
+		cerr << "Specify path to config file." << endl;
+		printHelp();
+		return EXIT_FAILURE;
+	}
+
+
+	//	printConfig();
+
+	cout << "Counting..." << endl;
+	cout << "============================================================" << endl;
+
+	doWork();
+
+	cout << "============================================================" << endl;
+	cout << "Counting is done." << endl;
+	//cout << "Press enter..." << endl;
+	//getchar();
+	return EXIT_SUCCESS;
+}
 
 void printHelp()
 {
 	cout << "Run as: bp.exe [config file]" << endl;
 }
 
-
-/* 
- * MAIN 
- */
-int main(int argc, char** argv)
+/*
+int runMain(int argc, char** argv)
 {
-	
-	struct Config config;
-	
 
 	// Spracovanie parametrov
 	if (argc == 2)
 	{
-		config = getConfig(argv);
-		if (!config.ok)
-		{
-			cerr << "Error: Wrong config file." << endl;
-			return EXIT_FAILURE;
-		}
+		loadConfig(argv);		
 	}
-	else if (argc == 1)
+	else 
 	{
-		cerr << "Error: Specify path to config file." << endl;
-		return EXIT_FAILURE;
-	}
-	else
-	{
-		cerr << "Error: Wrong params." << endl;
+		cerr << "Specify path to config file." << endl;
 		printHelp();
 		return EXIT_FAILURE;
 	}
+	
 
-	printConfig(config);
+//	printConfig();
 
 	cout << "Counting..." << endl;
 	cout << "============================================================" << endl;
 
-	doWork(config);
+	doWork();
 
 	cout << "============================================================" << endl;
 	cout << "Counting is done." << endl;
@@ -65,69 +103,95 @@ int main(int argc, char** argv)
 	//getchar();
     return EXIT_SUCCESS;
 }
+*/
 
-
-void doWork(struct Config config)
+void doWork()
 {
 	int frameCounter = 0;
 	Mat frame;
 	Mat fgmask;
 	Mat gray;
 	VideoCapture cap;
+	
+	Detectors *detectors = new Detectors(
+		typeOfDetector, typeOfLine,
+		leftPoint, middlePoint, rightPoint,
+		minWidthBox, maxWidthBox,
+		minHeightBox, maxHeightBox,
+		cascadeClassifier);
+
+	Trackers *trackers = new Trackers(
+		typeOfTracker, typeOfLine,
+		leftPoint, middlePoint, rightPoint);
+
+	//HT ht;
+	/*
+	OpenTLD tld;	
+	RunCT ct;
+	RunKCF kcf;
+	*/
+
+	/*
+	BS bs(typeOfLine,
+		leftPoint, middlePoint, rightPoint,
+		minWidthBox, maxWidthBox,
+		minHeightBox,maxHeightBox);
+
+	CC cc(typeOfLine,
+		leftPoint, middlePoint, rightPoint,
+		minWidthBox, maxWidthBox,
+		minHeightBox, maxHeightBox);
 
 	VJ_BS vj_bs;
-	HT ht;
-	OpenTLD tld;
+	*/
+
 	
-	RunCT ct;
-	BS bs;
-	CC cc;
-	RunKCF kcf;
 
 
-	vector <Box> boxes;
+	//vector <Box> boxes;
 	BackgroundSubtractorMOG2 *pMOG2;
-	string output, input;
+	
 	unsigned int leftCounter = 0;
 	unsigned int rightCounter = 0;
 	
 
 	cout << "Opening source... " << endl;
-	cap.open(config.source);
-
+	cap.open(source);
 	if (!cap.isOpened())
 	{
-		cerr << "Cannot open source." << endl;
-		exit(1);
+		cerr << "Cannot open source." << '\n';		
 	}
 	cout << "Done." << endl;
 
 	
 	pMOG2 = new BackgroundSubtractorMOG2(0, 16.0, true);
+	/*
 	// nastavenie detektora
-	switch (config.detector)
+	switch (typeOfDetector)
 	{
 	case MOVEMENT:
-		bs.setBS(config);
+		//bs.setBS(config);
 		break;
 	case MOVEMENT_CASCADE:
-		vj_bs.setVJ_BS(config);
+		//vj_bs.setVJ_BS(config);
 		break;
 	case CASCADE:
 		//cc.setCC(config.widthOfBox, config.heightOfBox, config.cascadeClassifier, config.typeOfLine, config.leftPoint, config.middlePoint, config.rightPoint);
-		cc.setCC(config);
+		//cc.setCC(config);
+		cc.loadClassifier(cascadeClassifier);
 		//pMOG2 = new BackgroundSubtractorMOG2(0, 64, false);
 		break;
 	case HOUGH_TRANSFORM:		
 		ht.setDetector(config);
 		break;
 	case MOVEMENT_HOUGH_TRANSFORM:
-		bs.setBS(config);
+		//bs.setBS(config);
 		ht.setDetector(config);
 		break;
 	}
-
-	switch (config.tracker)
+	*/
+	/*
+	switch (typeOfTracker)
 	{
 	case TLD:
 		tld.setCounter(config);
@@ -139,6 +203,7 @@ void doWork(struct Config config)
 		kcf.setCounter(config);
 		break;
 	}
+	*/
 
 	/* // pre prepisanie rovnakeho riadku v konzole
 	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -172,8 +237,14 @@ void doWork(struct Config config)
 		//cvtColor(frame, gray, CV_RGB2GRAY);
 		pMOG2->operator()(frame, fgmask, -1);
 
+		//if (frameCounter < 900)
+		//	continue;
 
-		switch (config.detector)
+		detectors->detect(frame, fgmask, frameCounter);
+		//boxes = ;
+		trackers->track(detectors->getBoxes(), frame, frameCounter);
+		/*
+		switch (typeOfDetector)
 		{
 		case MOVEMENT:
 			bs.setFrames(fgmask, frame);
@@ -225,12 +296,13 @@ void doWork(struct Config config)
 
 			break;
 		}
+		*/
 
 		
 		//if (boxes.size() != 0)
 		
-		
-		switch (config.tracker)
+		/*
+		switch (typeOfTracker)
 		{
 		case TLD:
 			
@@ -278,42 +350,42 @@ void doWork(struct Config config)
 			rightCounter = kcf.getRightCounter();
 			break;
 		}
-		
-		
+		*/
+
 	
-		switch (config.typeOfLine)
+		switch (typeOfLine)
 		{
 		case VERTICAL:
 			line(frame,
-				Point(config.leftPoint, 0),
-				Point(config.leftPoint, frame.size().height),
+				Point(leftPoint, 0),
+				Point(leftPoint, frame.size().height),
 				Scalar(0, 128, 255), // oranzova
 				2);
 			line(frame,
-				Point(config.middlePoint, 0),
-				Point(config.middlePoint, frame.size().height),
-				Scalar(255, 128, 0),
-				2); // bledomodra
+				Point(middlePoint, 0),
+				Point(middlePoint, frame.size().height),
+				Scalar(255, 128, 0), // bledomodra
+				2); 
 			line(frame,
-				Point(config.rightPoint, 0),
-				Point(config.rightPoint, frame.size().height),
-				Scalar(255, 0, 255),
-				2); // fialova	
+				Point(rightPoint, 0),
+				Point(rightPoint, frame.size().height),
+				Scalar(255, 0, 255), // fialova	
+				2); 
 			break;
 		case HORIZONTAL:
 			line(frame,
-				Point(0, config.leftPoint),
-				Point(frame.size().width, config.leftPoint),
+				Point(0, leftPoint),
+				Point(frame.size().width, leftPoint),
 				Scalar(0, 128, 255), // oranzova
 				2);
 			line(frame,
-				Point(0, config.middlePoint),
-				Point(frame.size().width, config.middlePoint),
+				Point(0, middlePoint),
+				Point(frame.size().width, middlePoint),
 				Scalar(255, 128, 0),
 				2); // bledomodra
 			line(frame,
-				Point(0 ,config.rightPoint),
-				Point(frame.size().width, config.rightPoint),
+				Point(0, rightPoint),
+				Point(frame.size().width, rightPoint),
 				Scalar(255, 0, 255),
 				2); // fialova	
 			break;
@@ -332,15 +404,15 @@ void doWork(struct Config config)
 		*/
 		/////
 
-		switch (config.typeOfLine)
+		switch (typeOfLine)
 		{
 		case VERTICAL:
-			putText(frame, to_string(leftCounter), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-			putText(frame, to_string(rightCounter), Point(frame.size().width - 20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(trackers->getLeftCounter()), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(trackers->getRightCounter()), Point(frame.size().width - 20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 			break;
 		case HORIZONTAL:
-			putText(frame, to_string(leftCounter), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-			putText(frame, to_string(rightCounter), Point(20, frame.size().height - 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(trackers->getLeftCounter()), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(trackers->getRightCounter()), Point(20, frame.size().height - 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
 			break;
 		}
 		
@@ -360,64 +432,65 @@ void doWork(struct Config config)
 }
 
 
-struct Config getConfig(char** argv)
-{
-	struct Config config;
-	int leftPoint, rightPoint, middlePoint;
+void loadConfig(char** argv)
+{	
+	//int leftPoint, rightPoint, middlePoint;
+	string line;
+	int result, size;
 
+	/*
 	config.ok = true;
 	config.mode = 0;
 	config.detector = 0;
 	config.tracker = 0;
 	config.source = "";
-
+	*/
 	cout << "Loading config file..." << endl;
 
+
 	ifstream file(argv[1]);
-	string line;
-	int result, size;
+	
 
 	if (!file.good()){
-		cerr << "Error: Wrong path to config." << endl;
-		config.ok = false;
-		return config;
+		cerr << "Wrong path to config." << '\n';		
+		exit(1);
 	}	
 
 	// cesta k zdroju
 	getline(file, line);
 	getline(file, line);
-	config.source = line;
+	source = line;
 
 	// typ detekcie
 	getline(file, line);
 	getline(file, line);
-	getline(file, line);
+	getline(file, line);	
 	if (!line.compare("MOVEMENT"))
 	{
-		config.detector = MOVEMENT;
+		typeOfDetector = MOVEMENT;
 	}
 	else if (!line.compare("MOVEMENT_CASCADE"))
 	{
-		config.detector = MOVEMENT_CASCADE;
+		typeOfDetector = MOVEMENT_CASCADE;
 	}
 	else if (!line.compare("CASCADE"))
 	{
-		config.detector = CASCADE;
+		typeOfDetector = CASCADE;
 	}
 	else if (!line.compare("HOUGH_TRANSFORM"))
 	{
-		config.detector = HOUGH_TRANSFORM;
+		typeOfDetector = HOUGH_TRANSFORM;
 	}
 	else if (!line.compare("MOVEMENT_HOUGH_TRANSFORM"))
 	{
-		config.detector = MOVEMENT_HOUGH_TRANSFORM;
+		typeOfDetector = MOVEMENT_HOUGH_TRANSFORM;
 	}
 	else
 	{
-		cerr << "Error: Wrong detector." << endl;
-		config.ok = false;
-		return config;
+		cerr << "Wrong detector." << '\n';
+		exit(1);
 	}
+	
 
 	// typ sledovania
 	getline(file, line);
@@ -425,157 +498,142 @@ struct Config getConfig(char** argv)
 	getline(file, line);
 	if (!line.compare("TLD"))
 	{
-		config.tracker = TLD;
+		typeOfTracker = TLD;
 	}
 	else if (!line.compare("CT"))
 	{
-		config.tracker = CT;
+		typeOfTracker = CT;
 	}
 	else if (!line.compare("KCF"))
 	{
-		config.tracker = KCF;
+		typeOfTracker = KCF;
 	}
 	else
 	{
-		cerr << "Error: Wrong tracker." << endl;
-		config.ok = false;
-		return config;
+		cerr << "Wrong tracker." << '\n';
+		exit(1);
+		
 	}
 
 	// left line
 	getline(file, line);
 	getline(file, line);
-	getline(file, line);
-		
-	result = sscanf(line.c_str(), "%d", &leftPoint);
-	if (result == EOF)
+	getline(file, line);		
+	if (sscanf(line.c_str(), "%d", &leftPoint) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong left line." << '\n';
+		exit(1);
 	}
-	config.leftPoint = leftPoint;
+	//leftPoint = leftPoint;
 
 	// middle line
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
-
-	result = sscanf(line.c_str(), "%d", &middlePoint);
-	if (result == EOF)
+	if (sscanf(line.c_str(), "%d", &middlePoint) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong middle line." << '\n';
+		exit(1);
 	}
-	config.middlePoint = middlePoint;
+	//middlePoint = middlePoint;
 
-	// left line
+	// right line
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
-
-	result = sscanf(line.c_str(), "%d", &rightPoint);
-	if (result == EOF)
+	if (sscanf(line.c_str(), "%d", &rightPoint) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong right line." << '\n';
+		exit(1);
 	}
-	config.rightPoint = rightPoint;
+	//rightPoint = rightPoint;
 
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
 	if (!line.compare("horizontal"))
 	{
-		config.typeOfLine = HORIZONTAL;
+		typeOfLine = HORIZONTAL;
 	}
 	else if (!line.compare("vertical"))
 	{
-		config.typeOfLine = VERTICAL;
+		typeOfLine = VERTICAL;
 	}
 	else
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong type of line." << '\n';
+		exit(1);
 	}
 
 	
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
-	config.cascadeClassifier = line;
+	/*
+	ifstream file2(line);
+	if (!file2.good()){
+		throw std::invalid_argument("Wrong path to cascade classifier.");
+	}
+	*/
+	cascadeClassifier = line;
 
 	getline(file, line);
 	getline(file, line);
-	getline(file, line);
-	
-	
-	result = sscanf(line.c_str(), "%d", &config.minWidthBox);
-	if (result == EOF)
+	getline(file, line);	
+	if (sscanf(line.c_str(), "%d", &minWidthBox) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong minimal width of the box." << '\n';
+		exit(1);
 	}
 	 
 	getline(file, line);
 	getline(file, line);
-	getline(file, line);
-
-
-	result = sscanf(line.c_str(), "%d", &config.maxWidthBox);
-	if (result == EOF)
+	getline(file, line);	
+	if (sscanf(line.c_str(), "%d", &maxWidthBox) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong maximal width of the box." << '\n';
+		exit(1);
 	}
 
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
-
-	
-	result = sscanf(line.c_str(), "%d", &config.minHeightBox);
-	if (result == EOF)
+	if (sscanf(line.c_str(), "%d", &minHeightBox) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong minimal height of the box." << '\n';
+		exit(1);
 	}
 
 	getline(file, line);
 	getline(file, line);
 	getline(file, line);
-
-
-	result = sscanf(line.c_str(), "%d", &config.maxHeightBox);
-	if (result == EOF)
+	if (sscanf(line.c_str(), "%d", &maxHeightBox) == EOF)
 	{
-		config.ok = false;
-		return config;
+		cerr << "Wrong maximal height of the box." << '\n';
+		exit(1);
 	}
 	
-	// TO DO: tresholdy
-
 	file.close();
 
-	cout << "Done." << endl;
-
-	return config;
+	cout << "Done." << endl;	
 }
 
-void printConfig(struct Config config)
+
+void printConfig()
 {
 	cout << "======================= CONFIG =======================" << endl;
-	cout << "Source: \t" << config.source << endl;
+	cout << "Source: \t" << source << endl;
 
 	cout << "Detection: \t";
-	switch (config.detector) {
+	switch (typeOfDetector) {
 	case MOVEMENT:
 		cout << "Only movement detection" << endl;
 		break;
 	case CASCADE:
-		cout << "Only cascade - " << config.cascadeClassifier << endl;
+		cout << "Only cascade - " << cascadeClassifier << endl;
 		break;
 	case MOVEMENT_CASCADE:
-		cout << "Movement detection with cascade - " << config.cascadeClassifier << endl;
+		cout << "Movement detection with cascade - " << cascadeClassifier << endl;
 		break;
 	case HOUGH_TRANSFORM:
 		cout << "Hough transform" << endl;
@@ -586,7 +644,7 @@ void printConfig(struct Config config)
 	}
 
 	cout << "Tracking: \t";
-	switch (config.tracker) {
+	switch (typeOfTracker) {
 	case TLD:
 		cout << "TLD tracker" << endl;
 		break;
@@ -598,7 +656,7 @@ void printConfig(struct Config config)
 		break;
 	}
 
-	cout << "Width box: \t" << config.minWidthBox << " < " << "width box" << " < " << config.maxWidthBox << endl;
-	cout << "Height box: \t" << config.minHeightBox << " < " << "height box" << " < " << config.maxHeightBox << endl;
+	cout << "Width box: \t" << minWidthBox << " < " << "width box" << " < " << maxWidthBox << endl;
+	cout << "Height box: \t" << minHeightBox << " < " << "height box" << " < " << maxHeightBox << endl;
 	cout << "=====================================================" << endl;
 }
