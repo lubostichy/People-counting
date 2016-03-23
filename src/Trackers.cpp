@@ -1,14 +1,27 @@
+
+
 #include "Trackers.hpp"
+
+
 
 using namespace cv;
 using namespace std;
 
 int Trackers::m_ID;
 
+
+
 Trackers::Trackers(
 	int t_typeOfTracker, int t_typeOfLine,
 	int t_leftPoint, int t_middlePoint, int t_rightPoint)
+	//string filename, int count, int com)
 {
+	
+	//result = filename;
+	//countingThresh = count;
+	compareThresh = 20;
+
+
 	m_typeOfTracker = t_typeOfTracker;
 	m_line = t_typeOfLine;
 	m_leftPoint = t_leftPoint;
@@ -17,6 +30,8 @@ Trackers::Trackers(
 	m_leftCounter = 0;
 	m_rightCounter = 0;
 	m_ID = 0;
+	
+	
 }
 
 Trackers::~Trackers()
@@ -108,8 +123,7 @@ void Trackers::trackCT()
 		m_CTperson[p]->lastBox = new Box(m_trackBox[m_trackBox.size() - 1]);
 
 		for (std::vector<int>::size_type p = inp.size() - 1; p != (std::vector<int>::size_type) - 1; p--)
-		{
-			cout << "Mazem osobu" << m_CTperson[inp[p]]->ID << endl;
+		{			
 			m_CTperson.erase(m_CTperson.begin() + inp[p]);
 		}
 
@@ -122,7 +136,7 @@ void Trackers::trackCT()
 				{
 					if (m_detBox[d].frameNO == m_trackBox[t].frameNO)
 					{
-						if (compareBoxes(m_detBox[d], m_trackBox[t], 20))
+						if (compareBoxes(m_detBox[d], m_trackBox[t], compareThresh))
 						{
 							//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
 							
@@ -138,7 +152,7 @@ void Trackers::trackCT()
 							// ulozim indexy
 							if (!exists)
 							{
-								cout << d << endl;
+								
 								ind.push_back(d);
 							}
 						}
@@ -146,13 +160,11 @@ void Trackers::trackCT()
 				}
 			}
 
-			sort(ind.begin(), ind.end());
+			
 
 			// vymazem detBox podla ulozenych indexov, ostatne boxy sa trackuju
 			for (std::vector<int>::size_type d = ind.size() - 1; d != (std::vector<int>::size_type) - 1; d--)
 			{
-				cout << '_' << endl;
-				cout << "Mazem box: " << m_detBox[d].printBox() << endl;
 				m_detBox.erase(m_detBox.begin() + ind[d]);
 			}
 			ind.clear();
@@ -183,8 +195,7 @@ void Trackers::updatePersonsCT()
 			m_CTperson[n]->ID = m_ID;
 			m_CTperson[n]->currBB = m_detBox[d].bbox;
 			m_CTperson[n]->firstBox = new Box(m_detBox[d]);
-			m_CTperson[n]->init(m_BWframe, m_CTperson[n]->currBB);
-			cout << "Vytvaram osobu: " << m_CTperson[n]->ID << "s boxom: " << m_CTperson[n]->firstBox->printBox() << endl;
+			m_CTperson[n]->init(m_BWframe, m_CTperson[n]->currBB);			
 			ind.push_back(d);
 		}
 	}
@@ -258,7 +269,7 @@ void Trackers::trackTLD()
 			m_TLDperson[p]->lost++;
 			//cout << this->person[p].lastBox->bbox.width << ' ' << this->person[p].lastBox->bbox.height << ' ' << this->person[p].lastBox->frameNO << endl;
 
-			if (m_TLDperson[p]->lost > 20)
+			if (m_TLDperson[p]->lost > 10)
 			{
 				// ulozim index	
 				if (m_TLDperson[p]->lastBox != NULL)
@@ -288,7 +299,7 @@ void Trackers::trackTLD()
 			{
 				if (m_detBox[d].frameNO == m_trackBox[t].frameNO)
 				{
-					if (compareBoxes(m_detBox[d], m_trackBox[t], 40)) // 20
+					if (compareBoxes(m_detBox[d], m_trackBox[t], compareThresh)) // 20
 					{
 						//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
 
@@ -328,7 +339,7 @@ void Trackers::updatePersonsTLD()
 	int n;
 
 	
-
+	
 
 	if (m_detBox.size() > 0) // ak nieco detekovalo
 	{
@@ -358,6 +369,7 @@ void Trackers::updatePersonsTLD()
 			m_TLDperson[n]->detectorCascade->imgWidthStep = grey.step;
 			m_TLDperson[n]->selectObject(grey, &m_detBox[d].bbox);
 
+			/*
 			m_TLDperson[n]->detectorCascade->varianceFilter->enabled = true;
 			m_TLDperson[n]->detectorCascade->ensembleClassifier->enabled = true;
 			m_TLDperson[n]->detectorCascade->nnClassifier->enabled = true;
@@ -379,6 +391,7 @@ void Trackers::updatePersonsTLD()
 
 
 			m_TLDperson[n]->skipProcessingOnce = false;
+			*/
 
 			ind.push_back(d);
 			//cout << "Osoba ID " << person[person.size() - 1].ID << " bola vytvorena." << endl;
@@ -459,7 +472,7 @@ void Trackers::trackKCF()
 			{
 				if (m_detBox[d].frameNO == m_trackBox[t].frameNO)
 				{
-					if (compareBoxes(m_detBox[d], m_trackBox[t], 20))
+					if (compareBoxes(m_detBox[d], m_trackBox[t], compareThresh))
 					{
 						//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
 
@@ -579,22 +592,54 @@ bool Trackers::isInArea(Box *t_lastBox)
 
 void Trackers::counting(Box *t_first, Box *t_last)
 {
+	/*
+	if (m_line == VERTICAL)
+	{
+		if ((t_first->bbox.x + t_first->bbox.width / 2) < (t_last->bbox.x + t_last->bbox.width / 2))
+		{
+			if ((t_last->bbox.x + t_last->bbox.width / 2) - (t_first->bbox.x + t_first->bbox.width / 2) > countingThresh)
+			{
+				m_rightCounter++;
+				fs.open(result, std::fstream::app);
+				//cout << m_numero << ",R" << endl;
+				fs << t_last->frameNO << ",R\n";
+				fs.close();
+			}
+		}
+
+		if ((t_first->bbox.x + t_first->bbox.width / 2) > (t_last->bbox.x + t_last->bbox.width / 2))
+		{
+			if ((t_first->bbox.x + t_first->bbox.width / 2) - (t_last->bbox.x + t_last->bbox.width / 2) > countingThresh)
+			{
+				m_leftCounter++;
+				fs.open(result, std::fstream::app);
+				//cout << m_numero << ",L" << endl;
+				fs << t_last->frameNO << ",L\n";
+				fs.close();
+			}
+		}
+	}
+	*/
+	
+	// original
 	if (m_line == VERTICAL)
 	{
 		if (t_first->bbox.x + t_first->bbox.width / 2 > m_middlePoint
 			&&
 			t_last->bbox.x + t_last->bbox.width / 2 < m_middlePoint)
 		{
-			m_leftCounter++;
+			m_leftCounter++;			
 			cout << m_numero << ",L" << endl;
+			
 		}
 
 		if (t_first->bbox.x + t_first->bbox.width / 2 < m_middlePoint
 			&&
 			t_last->bbox.x + t_last->bbox.width / 2 > m_middlePoint)
 		{
-			m_rightCounter++;
+			m_rightCounter++;			
 			cout << m_numero << ",R" << endl;
+			
 		}
 	}
 	else if (m_line == HORIZONTAL)
@@ -615,6 +660,7 @@ void Trackers::counting(Box *t_first, Box *t_last)
 			cout << m_numero << ",B" << endl;
 		}		
 	}
+	
 
 }
 

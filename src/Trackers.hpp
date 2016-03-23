@@ -2,6 +2,7 @@
 #define TRACKERS
 
 #include <opencv2\opencv.hpp>
+#include <fstream>
 #include "Box.h"
 #include "OpenTLD\tld\TLD.h"
 #include "Kernelized_Correlation_Filters\kcftracker.hpp"
@@ -13,10 +14,15 @@ public:
 	Trackers(
 		int t_typeOfTracker, int t_typeOfLine,
 		int t_leftPoint, int t_middlePoint, int t_rightPoint);
+		//std::string filename, int count, int com);
 	~Trackers();
 	void track(vector<Box> t_detectedBoxes, cv::Mat t_RGBframe, int t_numero);
 	int getLeftCounter();
 	int getRightCounter();
+
+	std::string result; //= "test.txt";
+	int countingThresh, compareThresh;
+	std::ofstream fs;
 private:
 
 	/* TLD tracker */

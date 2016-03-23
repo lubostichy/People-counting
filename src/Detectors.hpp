@@ -4,6 +4,7 @@
 #include <opencv2\opencv.hpp>
 //#include "Box.h"
 #include "HoughTransform\DenseGreedyDetection\GreedyDetection.h"
+#include "C4_detector\Pedestrian.h"
 
 class Detectors
 {
@@ -45,13 +46,15 @@ private:
 	/* penalty for adding a hypothesis, parameter of detection algorithm */
 	float hyp_penalty = 1500;
 	/* maximum number of objects in an image */
-	float MaxObjectsCount = 8;
+	float MaxObjectsCount = 3;
 	/* resize images before detection by this coefficient */
-	double koef;
+	double koef = 0.647;
 
 	std::string forest_path = "pedestrian.dat";
 
 	CGreedyDetection gd;
+
+	DetectionScanner m_ds;
 
 	/* detekcia zalozena len pohybe */
 	const int MOVEMENT = 1;
@@ -67,6 +70,9 @@ private:
 
 	/* detektor s vyuzitim Houghovej transformacie a s vyuzitim pohybu */
 	const int MOVEMENT_HOUGH_TRANSFORM = 5;
+
+	const int C4 = 6;
+	const int MOVEMENT_C4 = 7;
 
 	const int VERTICAL = 1;
 	const int HORIZONTAL = 2;
@@ -88,16 +94,22 @@ private:
 	void detectMovement();
 	void detectMovementCascade();
 	void detectCascade();
-	void detectHT();
-	void detectMovementHT();
+	//void detectHT();
+	//void detectMovementHT();
+	void detectC4();
+	void detectMovementC4();
 	void setFrames(cv::Mat t_RGBFrame, cv::Mat t_BWFrame, int t_numero);
 	void loadCascadeClassifier(std::string t_cascadeClassifier);
+	void loadCascade(DetectionScanner& ds);
 	
 	std::vector<cv::Rect> getBoundRects();
 	bool isInArea(cv::Rect);
 	bool isGoodSize(cv::Rect);
-	cv::Rect decreaseRect(cv::Rect t_bigRect, float t_coefWidth, float t_coefHeight);
-	cv::Rect enlargeRect(cv::Rect t_littleRect, int t_coefWidth, int t_coefHeight);
+	void decreaseRect(cv::Rect *t_bigRect, float t_coefWidth, float t_coefHeight);
+	void enlargeRect(cv::Rect *t_littleRect, int t_coefWidth, int t_coefHeight);
+	
+	cv::Rect m_area;
+	void setArea();
 };
 
 

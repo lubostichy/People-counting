@@ -44,7 +44,9 @@ const int HOUGH_TRANSFORM = 4;
 /* detektor s vyuzitim Houghovej transformacie a s vyuzitim pohybu */
 const int MOVEMENT_HOUGH_TRANSFORM = 5;
 
+const int C4 = 6;
 
+const int MOVEMENT_C4 = 7;
 /* TLD tracker */
 const int TLD = 1;
 
@@ -69,6 +71,7 @@ void doWork();
 
 //int runMain(int argc, char** argv);
 
-
+std::string getFileName();
+int countingThresh, compareThresh;
 
 #endif

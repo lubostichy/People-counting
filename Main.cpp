@@ -1,4 +1,3 @@
-
 #include <iostream>
 //#include "src\Cascade_BackgroundSubtraction\VJ_BS.h"
 //#include "src\Cascade\CC.h"
@@ -23,28 +22,13 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	
-	/*
-	try 
-	{
-		ret = runMain(argc, argv);
-	}
-	catch (std::exception & e)
-	{
-		cout << "\033[1;31mA std::exception was raised:\033[0m " << e.what() <<  '\n';
-		ret = EXIT_FAILURE;
-		throw;
-	}
-	catch (...)
-	{
-		cout << "\033[1;31mAn unknown exception was raised\033[0m " << endl;
-		ret = EXIT_FAILURE; 
-		throw;
-	}
-	*/
+	
 
-	if (argc == 2)
+	if (argc == 2) 
 	{
 		loadConfig(argv);
+		//countingThresh = stoi(argv[2]);
+		//compareThresh = stoi(argv[3]);
 	}
 	else
 	{
@@ -73,37 +57,6 @@ void printHelp()
 	cout << "Run as: bp.exe [config file]" << endl;
 }
 
-/*
-int runMain(int argc, char** argv)
-{
-
-	// Spracovanie parametrov
-	if (argc == 2)
-	{
-		loadConfig(argv);		
-	}
-	else 
-	{
-		cerr << "Specify path to config file." << endl;
-		printHelp();
-		return EXIT_FAILURE;
-	}
-	
-
-//	printConfig();
-
-	cout << "Counting..." << endl;
-	cout << "============================================================" << endl;
-
-	doWork();
-
-	cout << "============================================================" << endl;
-	cout << "Counting is done." << endl;
-	//cout << "Press enter..." << endl;
-	//getchar();
-    return EXIT_SUCCESS;
-}
-*/
 
 void doWork()
 {
@@ -120,32 +73,18 @@ void doWork()
 		minHeightBox, maxHeightBox,
 		cascadeClassifier);
 
+	//string filename = getFileName();
+
 	Trackers *trackers = new Trackers(
 		typeOfTracker, typeOfLine,
 		leftPoint, middlePoint, rightPoint);
 
-	//HT ht;
 	/*
-	OpenTLD tld;	
-	RunCT ct;
-	RunKCF kcf;
-	*/
-
-	/*
-	BS bs(typeOfLine,
+	Trackers *trackers = new Trackers(
+		typeOfTracker, typeOfLine,
 		leftPoint, middlePoint, rightPoint,
-		minWidthBox, maxWidthBox,
-		minHeightBox,maxHeightBox);
-
-	CC cc(typeOfLine,
-		leftPoint, middlePoint, rightPoint,
-		minWidthBox, maxWidthBox,
-		minHeightBox, maxHeightBox);
-
-	VJ_BS vj_bs;
-	*/
-
-	
+		filename, countingThresh, compareThresh);
+		*/
 
 
 	//vector <Box> boxes;
@@ -165,54 +104,12 @@ void doWork()
 
 	
 	pMOG2 = new BackgroundSubtractorMOG2(0, 16.0, true);
-	/*
-	// nastavenie detektora
-	switch (typeOfDetector)
-	{
-	case MOVEMENT:
-		//bs.setBS(config);
-		break;
-	case MOVEMENT_CASCADE:
-		//vj_bs.setVJ_BS(config);
-		break;
-	case CASCADE:
-		//cc.setCC(config.widthOfBox, config.heightOfBox, config.cascadeClassifier, config.typeOfLine, config.leftPoint, config.middlePoint, config.rightPoint);
-		//cc.setCC(config);
-		cc.loadClassifier(cascadeClassifier);
-		//pMOG2 = new BackgroundSubtractorMOG2(0, 64, false);
-		break;
-	case HOUGH_TRANSFORM:		
-		ht.setDetector(config);
-		break;
-	case MOVEMENT_HOUGH_TRANSFORM:
-		//bs.setBS(config);
-		ht.setDetector(config);
-		break;
-	}
-	*/
-	/*
-	switch (typeOfTracker)
-	{
-	case TLD:
-		tld.setCounter(config);
-		break;
-	case CT:
-		ct.setCounter(config);
-		break;
-	case KCF:
-		kcf.setCounter(config);
-		break;
-	}
-	*/
-
-	/* // pre prepisanie rovnakeho riadku v konzole
-	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
-	GetConsoleScreenBufferInfo(h, &bufferInfo);
-	*/
+	
 	int size;
 	Mat data;
 	Mat plot_result;
+
+	
 
 	// hlavny cyklus 
 	while (1)
@@ -220,11 +117,6 @@ void doWork()
 		//SetConsoleCursorPosition(h, bufferInfo.dwCursorPosition);
 		frameCounter++;
 
-		/*
-		if (frameCounter % 100 == 0)
-			cout << frameCounter << ". frame"<< endl;
-		*/
-		
 
 		cap >> frame;
 
@@ -234,123 +126,15 @@ void doWork()
 			break;
 		}
 
+
 		//cvtColor(frame, gray, CV_RGB2GRAY);
 		pMOG2->operator()(frame, fgmask, -1);
-
-		//if (frameCounter < 900)
-		//	continue;
+		
 
 		detectors->detect(frame, fgmask, frameCounter);
 		//boxes = ;
 		trackers->track(detectors->getBoxes(), frame, frameCounter);
-		/*
-		switch (typeOfDetector)
-		{
-		case MOVEMENT:
-			bs.setFrames(fgmask, frame);
-			bs.detect();
-			boxes = bs.boxes;
-			bs.boxes.clear();
-			break;
-		case MOVEMENT_CASCADE:			
-			vj_bs.setFrames(fgmask, frame);
-			vj_bs.detect();
-			boxes = vj_bs.boxes;
-			vj_bs.boxes.clear();
-			break;
-		case CASCADE:
-			cc.setFrame(frame);
-			cc.detect();
-			boxes = cc.boxes;
-			cc.boxes.clear();
-			break;
-		case HOUGH_TRANSFORM:
-			ht.setRGBFrame(frame);
-			ht.detect();
-			boxes = ht.boxes;
-			for (unsigned int i = 0; i < boxes.size(); i++)
-			{
-				rectangle(frame, boxes[i].bbox, Scalar(0, 255, 0), 2);
-			}
-			ht.boxes.clear();
-			break;
-		case MOVEMENT_HOUGH_TRANSFORM:
-			bs.setFrames(fgmask, frame);
-			bs.findBoundingBoxes();
-			//bs.detect(); // detekuje pohyb
-			ht.setRGBFrame(frame);
-
-			// na kazdom boxe pohybu sa detekuje osoba
-			for (unsigned int i = 0; i < bs.boundingBoxes.size(); i++)
-			{
-				ht.detect(bs.boundingBoxes[i]);
-			}
-			boxes = ht.boxes;
-			// boxy detekcie osoby
-			for (unsigned int i = 0; i < boxes.size(); i++)
-			{
-				rectangle(frame, boxes[i].bbox, Scalar(0, 255, 0), 2);
-			}
-			ht.gd.boxes.clear();
-			bs.boundingBoxes.clear();
-
-			break;
-		}
-		*/
-
 		
-		//if (boxes.size() != 0)
-		
-		/*
-		switch (typeOfTracker)
-		{
-		case TLD:
-			
-			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
-			{
-				boxes[i].setFrameNO(frameCounter);
-				tld.addBox(boxes[i]);
-				boxes.pop_back();
-			}
-
-			tld.setFrames(frame, frameCounter, leftCounter, rightCounter);
-
-			tld.track();
-			tld.initTracking();
-			leftCounter = tld.getLeftCounter();
-			rightCounter = tld.getRightCounter();
-			
-			break;
-		case CT:
-			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
-			{
-				boxes[i].setFrameNO(frameCounter);
-				ct.addBox(boxes[i]);
-				boxes.pop_back();
-
-			}
-			ct.setFrames(frame, frameCounter, leftCounter, rightCounter);
-
-			ct.track();
-			ct.initTracking();
-			leftCounter = ct.getLeftCounter();
-			rightCounter = ct.getRightCounter();
-			break;
-		case KCF:
-			for (vector<int>::size_type i = boxes.size() - 1; i != (vector<int>::size_type) - 1; i--)
-			{
-				boxes[i].setFrameNO(frameCounter);
-				kcf.addBox(boxes[i]);
-				boxes.pop_back();
-			}
-			kcf.setFrames(frame, frameCounter, leftCounter, rightCounter);
-			kcf.track();
-			kcf.initTracking();
-			leftCounter = kcf.getLeftCounter();
-			rightCounter = kcf.getRightCounter();
-			break;
-		}
-		*/
 
 	
 		switch (typeOfLine)
@@ -407,12 +191,34 @@ void doWork()
 		switch (typeOfLine)
 		{
 		case VERTICAL:
-			putText(frame, to_string(trackers->getLeftCounter()), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-			putText(frame, to_string(trackers->getRightCounter()), Point(frame.size().width - 20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, 
+				to_string(trackers->getLeftCounter()), 
+				Point(20, 20), 
+				cv::FONT_HERSHEY_SIMPLEX, 
+				0.5, 
+				Scalar(0, 255, 0), 
+				2);
+			putText(frame, 
+				to_string(trackers->getRightCounter()),
+				Point(frame.size().width - 20, 20), 
+				cv::FONT_HERSHEY_SIMPLEX, 0.5, 
+				Scalar(0, 255, 0), 
+				2);
 			break;
 		case HORIZONTAL:
-			putText(frame, to_string(trackers->getLeftCounter()), Point(20, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
-			putText(frame, to_string(trackers->getRightCounter()), Point(20, frame.size().height - 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 2);
+			putText(frame, to_string(trackers->getLeftCounter()), 
+				Point(20, 20), 
+				cv::FONT_HERSHEY_SIMPLEX, 
+				0.5, 
+				Scalar(0, 255, 0), 
+				2);
+			putText(frame, 
+				to_string(trackers->getRightCounter()), 
+				Point(20, frame.size().height - 20), 
+				cv::FONT_HERSHEY_SIMPLEX, 
+				0.5, 
+				Scalar(0, 255, 0), 
+				2);
 			break;
 		}
 		
@@ -423,12 +229,14 @@ void doWork()
 
 		imwrite(filename, frame);
 		*/
-
+		/*
 		imshow("People passing through a door counter", frame);
 		waitKey(1);
+		*/
 		frame.release();
 
 	}
+	cout << frameCounter << endl;
 }
 
 
@@ -484,6 +292,14 @@ void loadConfig(char** argv)
 	else if (!line.compare("MOVEMENT_HOUGH_TRANSFORM"))
 	{
 		typeOfDetector = MOVEMENT_HOUGH_TRANSFORM;
+	}
+	else if (!line.compare("C4"))
+	{
+		typeOfDetector = C4;
+	}
+	else if (!line.compare("MOVEMENT_C4"))
+	{
+		typeOfDetector = MOVEMENT_C4;
 	}
 	else
 	{
@@ -659,4 +475,59 @@ void printConfig()
 	cout << "Width box: \t" << minWidthBox << " < " << "width box" << " < " << maxWidthBox << endl;
 	cout << "Height box: \t" << minHeightBox << " < " << "height box" << " < " << maxHeightBox << endl;
 	cout << "=====================================================" << endl;
+}
+
+string getFileName()
+{
+	string detector, tracker;
+	switch(typeOfDetector) {
+	case MOVEMENT:
+		//cout << "Only movement detection" << endl;
+		detector = "Only movement detection";
+		break;
+	case CASCADE:
+		//cout << "Only cascade - " << cascadeClassifier << endl;
+		detector = "Only cascade";
+		break;
+	case MOVEMENT_CASCADE:
+		//cout << "Movement detection with cascade - " << cascadeClassifier << endl;
+		detector = "Movement detection with cascade";
+		break;
+		/*
+	case HOUGH_TRANSFORM:
+		cout << "Hough transform" << endl;
+		break;
+		
+	case MOVEMENT_HOUGH_TRANSFORM:
+		cout << "Hough transform with movement detection" << endl;
+		break;
+		*/
+	case C4:
+		detector = "C4";
+		break;
+	case MOVEMENT_C4:
+		detector = "Movement C4";
+		break;
+	}
+
+	//cout << "Tracking: \t";
+	switch (typeOfTracker) {
+	case TLD:
+		//cout << "TLD tracker" << endl;
+		tracker = "TLD";
+		break;
+	case CT:
+		//cout << "Compressive tracking" << endl;
+		tracker = "CT";
+		break;
+	case KCF:
+		//cout << "Kernelized correlation filters" << endl;
+		tracker = "KCF";
+		break;
+	}
+
+	char filename[200];
+	sprintf(filename, "menza_%s_%s_count%d_com%d.txt", detector.c_str(), tracker.c_str(), countingThresh, compareThresh);
+	cout << filename << '\n';
+	return filename;
 }
