@@ -1,8 +1,11 @@
-
+/*
+* Poèítání prùchodù osob dveømi s využitím stacionární kamery
+* Bakalárska práca, 2016
+* ¼uboš Tichý, xtichy23
+* Trackers.cpp
+*/
 
 #include "Trackers.hpp"
-
-
 
 using namespace cv;
 using namespace std;
@@ -10,15 +13,15 @@ using namespace std;
 int Trackers::m_ID;
 
 
-
+/* 
+Konštruktor sledovaèa. 
+*/
 Trackers::Trackers(
 	int t_typeOfTracker, int t_typeOfLine,
 	int t_leftPoint, int t_middlePoint, int t_rightPoint)
-	//string filename, int count, int com)
 {
 	
-	//result = filename;
-	//countingThresh = count;
+	
 	compareThresh = 20;
 
 
@@ -34,18 +37,23 @@ Trackers::Trackers(
 	
 }
 
+/* 
+Deštruktor sledovaèa.
+*/
 Trackers::~Trackers()
 {
 
 }
 
+/* 
+Rozhodne pod¾a zadanej metódy, ktorá metóda sledovania sa použije. 
+*/
 void Trackers::track(vector<Box> t_detectedBoxes, Mat t_RGBframe, int t_numero)
 {
 	setFrames(t_RGBframe, t_numero);
-	//for (vector<Box>::iterator it = t_detectedBoxes.begin(); it != t_detectedBoxes.end(); ++it)
+	
 	for (unsigned int b = 0; b < t_detectedBoxes.size(); b++)
-	{
-		//addBox(t_detectedBoxes[b]);
+	{		
 		m_detBox.push_back(t_detectedBoxes[b]);
 	}
 
@@ -67,6 +75,7 @@ void Trackers::track(vector<Box> t_detectedBoxes, Mat t_RGBframe, int t_numero)
 
 }
 
+/* Metóda komrepsívneho sledovania. */
 void Trackers::trackCT()
 {
 	Box tmpBox;
@@ -80,7 +89,7 @@ void Trackers::trackCT()
 
 	for (unsigned int p = 0; p < m_CTperson.size(); p++)
 	{
-		//cout << m_CTperson[p]->ID << "/" << m_numero << endl;
+		
 		m_CTperson[p]->processFrame(m_BWframe, m_CTperson[p]->currBB);
 
 		tmpBox.type = TRACKER;
@@ -91,8 +100,7 @@ void Trackers::trackCT()
 		putText(m_RGBframe, std::to_string(m_CTperson[p]->ID), Point(m_CTperson[p]->currBB.x + 10, m_CTperson[p]->currBB.y + m_CTperson[p]->currBB.height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 2);
 		m_trackBox.push_back(tmpBox);
 
-		//if ((this->person[p].lastBox->bbox.x < (this->person[p].currBB.x + 3)) &&
-		//	(this->person[p].lastBox->bbox.x >(this->person[p].currBB.x - 3)))
+		
 		if (m_CTperson[p]->lastBox != NULL)
 		{
 
@@ -138,7 +146,7 @@ void Trackers::trackCT()
 					{
 						if (compareBoxes(m_detBox[d], m_trackBox[t], compareThresh))
 						{
-							//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
+							
 							
 							exists = false;
 							//ak je uz ulozeny neukladam
@@ -151,8 +159,7 @@ void Trackers::trackCT()
 
 							// ulozim indexy
 							if (!exists)
-							{
-								
+							{								
 								ind.push_back(d);
 							}
 						}
@@ -180,6 +187,9 @@ void Trackers::trackCT()
 	}
 }
 
+/*
+Filtrácia osôb pre kompresívne sledovanie.
+*/
 void Trackers::updatePersonsCT()
 {
 	vector <int> ind;
@@ -201,12 +211,14 @@ void Trackers::updatePersonsCT()
 	}
 
 	for (std::vector<int>::size_type d = ind.size() - 1; d != (std::vector<int>::size_type) - 1; d--)
-	{
-		//cout << "Mazem pouzity box: " << detBox[d].printBox() << endl;
+	{		
 		m_detBox.erase(m_detBox.begin() + ind[d]);
 	}
 }
 
+/*
+Metóda sledovania TLD.
+*/
 void Trackers::trackTLD()
 {
 	Box tmpBox;
@@ -253,13 +265,12 @@ void Trackers::trackTLD()
 					}
 				}
 				else
-				{
-					//_person[p]->lastBox = new Box(_trackBox[_trackBox.size() - 1]);
+				{					
 					counting(m_TLDperson[p]->firstBox, m_TLDperson[p]->lastBox);
 					inp.push_back(p);
 				}
 
-				//this->person[p].lastBox->frameNO = trackBox[trackBox.size() - 1].frameNO;			
+					
 			}
 			m_TLDperson[p]->lastBox = new Box(m_trackBox[m_trackBox.size() - 1]);
 		}
@@ -267,7 +278,7 @@ void Trackers::trackTLD()
 		{
 
 			m_TLDperson[p]->lost++;
-			//cout << this->person[p].lastBox->bbox.width << ' ' << this->person[p].lastBox->bbox.height << ' ' << this->person[p].lastBox->frameNO << endl;
+			
 
 			if (m_TLDperson[p]->lost > 10)
 			{
@@ -285,7 +296,7 @@ void Trackers::trackTLD()
 	// vymazem ulozene
 	for (vector<int>::size_type p = inp.size() - 1; p != (vector<int>::size_type) - 1; p--)
 	{
-		//cout << "Mazem ososbu" << _person[inp[p]]->ID << endl;
+		
 		m_TLDperson.erase(m_TLDperson.begin() + inp[p]);
 	}
 	inp.clear();
@@ -301,8 +312,7 @@ void Trackers::trackTLD()
 				{
 					if (compareBoxes(m_detBox[d], m_trackBox[t], compareThresh)) // 20
 					{
-						//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
-
+						
 						exists = false;
 						//ak je uz ulozeny neukladam
 						for (unsigned int isd = 0; isd < ind.size(); isd++)
@@ -333,28 +343,24 @@ void Trackers::trackTLD()
 	}
 }
 
+
+/*
+Filtrácia osôb pre sledovanie TLD.
+*/
 void Trackers::updatePersonsTLD()
 {
 	vector <int> ind;
 	int n;
-
-	
-	
 
 	if (m_detBox.size() > 0) // ak nieco detekovalo
 	{
 
 		// vytvorim newPersonTracking z ponechanych detBoxov
 		for (unsigned int d = 0; d < m_detBox.size(); d++)
-		{
-			//tld::TLD *tmp = new tld::TLD();
-			//tld::TLD *tmp = newPerson(detBox[d]); // operator
-			//_person.push_back(*new tld::TLD(*tmp));		// deep copy
-			//delete tmp;
+		{			
 
 			m_TLDperson.push_back(new tld::TLD());
-			//_person.emplace_back();
-
+			
 			n = m_TLDperson.size() - 1;
 			m_ID++;
 			m_TLDperson[n]->ID = m_ID;
@@ -368,33 +374,8 @@ void Trackers::updatePersonsTLD()
 			m_TLDperson[n]->detectorCascade->imgHeight = grey.rows;
 			m_TLDperson[n]->detectorCascade->imgWidthStep = grey.step;
 			m_TLDperson[n]->selectObject(grey, &m_detBox[d].bbox);
-
-			/*
-			m_TLDperson[n]->detectorCascade->varianceFilter->enabled = true;
-			m_TLDperson[n]->detectorCascade->ensembleClassifier->enabled = true;
-			m_TLDperson[n]->detectorCascade->nnClassifier->enabled = true;
-
-			// classifier
-			m_TLDperson[n]->detectorCascade->useShift = true;
-			m_TLDperson[n]->detectorCascade->shift = 0.1;
-			m_TLDperson[n]->detectorCascade->minScale = -10;
-			m_TLDperson[n]->detectorCascade->maxScale = 10;
-			m_TLDperson[n]->detectorCascade->minSize = 25;
-			m_TLDperson[n]->detectorCascade->numTrees = 10;
-			m_TLDperson[n]->detectorCascade->numFeatures = 13;
-
-			m_TLDperson[n]->detectorCascade->nnClassifier->thetaTP = 0.65;
-			m_TLDperson[n]->detectorCascade->nnClassifier->thetaFP = 0.5;
-
-			m_TLDperson[n]->detectorCascade->numFeatures = 13;
-			m_TLDperson[n]->detectorCascade->useShift = true;
-
-
-			m_TLDperson[n]->skipProcessingOnce = false;
-			*/
-
-			ind.push_back(d);
-			//cout << "Osoba ID " << person[person.size() - 1].ID << " bola vytvorena." << endl;
+			
+			ind.push_back(d);			
 		}
 
 		//vymazem pouzite detBoxy
@@ -409,6 +390,9 @@ void Trackers::updatePersonsTLD()
 	}
 }
 
+/*
+Metóda sledovania korelaènými filtrami.
+*/
 void Trackers::trackKCF()
 {
 	Box tmpBox;
@@ -440,8 +424,7 @@ void Trackers::trackKCF()
 				}
 				else
 				{
-					m_KCFperson[p]->stay = 0;
-					//_person[p].lastBox = new Box(_trackBox[_trackBox.size() - 1]);
+					m_KCFperson[p]->stay = 0;					
 				}
 			}
 			else
@@ -457,8 +440,7 @@ void Trackers::trackKCF()
 	}
 
 	for (vector<int>::size_type p = inp.size() - 1; p != (vector<int>::size_type) - 1; p--)
-	{
-		//cout << "Mazem ososbu" << this->person[inp[p]].ID << endl;
+	{		
 		m_KCFperson.erase(m_KCFperson.begin() + inp[p]);
 	}
 
@@ -474,8 +456,7 @@ void Trackers::trackKCF()
 				{
 					if (compareBoxes(m_detBox[d], m_trackBox[t], compareThresh))
 					{
-						//cout << "Ukladam box pre vymazanie: " << detBox[d].printBox() << endl;
-
+						
 						exists = false;
 						//ak je uz ulozeny neukladam
 						for (unsigned int isd = 0; isd < ind.size(); isd++)
@@ -488,7 +469,6 @@ void Trackers::trackKCF()
 						// ulozim indexy
 						if (!exists)
 						{
-							//cout << _actualFrameNO << endl;
 							ind.push_back(d);
 						}
 					}
@@ -499,7 +479,6 @@ void Trackers::trackKCF()
 		// vymazem detBox podla ulozenych indexov, ostatne boxy sa trackuju
 		for (vector<int>::size_type d = ind.size() - 1; d != (vector<int>::size_type) - 1; d--)
 		{
-			//cout << "Mazem box: " << this->detBox[d].printBox() << endl;
 			m_detBox.erase(m_detBox.begin() + ind[d]);
 		}
 		ind.clear();
@@ -512,6 +491,9 @@ void Trackers::trackKCF()
 	}
 }
 
+/*
+Filtrácia osôb pre sledovanie korelaènými filtrami.
+*/
 void Trackers::updatePersonsKCF()
 {
 	vector <int> ind;
@@ -523,10 +505,7 @@ void Trackers::updatePersonsKCF()
 
 		// vytvorim newPersonTracking z ponechanych detBoxov
 		for (unsigned int d = 0; d < m_detBox.size(); d++)
-		{
-			//KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
-			//KCFTracker tmp(false, true, true, false);
-			//KCFTracker * tmp = new KCFTracker(false, true, true, false);
+		{			
 			m_KCFperson.push_back(new KCFTracker());
 			int n = m_KCFperson.size() - 1;
 			m_KCFperson[n]->init(m_detBox[d].bbox, m_RGBframe);
@@ -534,16 +513,15 @@ void Trackers::updatePersonsKCF()
 			m_KCFperson[n]->lost = 0;
 			m_KCFperson[n]->firstBox = new Box(m_detBox[d]);
 			
-			//delete tmp;
+			
 			ind.push_back(d);
-			//cout << "Osoba ID " << person[person.size() - 1].ID << " bola vytvorena." << endl;
+			
 		}
 
 		//vymazem pouzite detBoxy
 		// vymazem detBox podla ulozenych indexov, ostatne boxy sa trackuju
 		for (vector<int>::size_type d = ind.size() - 1; d != (vector<int>::size_type) - 1; d--)
 		{
-			//cout << "Mazem pouzity box: " << detBox[d].printBox() << endl;
 			m_detBox.erase(m_detBox.begin() + ind[d]);
 		}
 
@@ -551,7 +529,9 @@ void Trackers::updatePersonsKCF()
 	}
 }
 
-
+/*
+Pridá box medzi ïalšie boxy pod¾a typu.
+*/
 void Trackers::addBox(Box box)
 {
 	if (box.type == DETECTOR)
@@ -564,6 +544,9 @@ void Trackers::addBox(Box box)
 	}
 }
 
+/*
+Nastaví snímky a aktuálne poradové èíslo snímky.
+*/
 void Trackers::setFrames(cv::Mat t_RGBframe, int t_numero)
 {
 	m_RGBframe = t_RGBframe;
@@ -571,6 +554,9 @@ void Trackers::setFrames(cv::Mat t_RGBframe, int t_numero)
 	m_numero = t_numero;
 }
 
+/*
+Testuje, èi je bounding box sledovania v oblasti záujmu.
+*/
 bool Trackers::isInArea(Box *t_lastBox)
 {
 	if (m_line == VERTICAL)
@@ -588,8 +574,9 @@ bool Trackers::isInArea(Box *t_lastBox)
 	return false;
 }
 
-
-
+/*
+Zapoèítanie osoby a urèenie smeru pohybu.
+*/
 void Trackers::counting(Box *t_first, Box *t_last)
 {
 	/*
@@ -629,7 +616,7 @@ void Trackers::counting(Box *t_first, Box *t_last)
 			t_last->bbox.x + t_last->bbox.width / 2 < m_middlePoint)
 		{
 			m_leftCounter++;			
-			cout << m_numero << ",L" << endl;
+			cout << m_numero << ",L" << endl; // Left
 			
 		}
 
@@ -638,7 +625,7 @@ void Trackers::counting(Box *t_first, Box *t_last)
 			t_last->bbox.x + t_last->bbox.width / 2 > m_middlePoint)
 		{
 			m_rightCounter++;			
-			cout << m_numero << ",R" << endl;
+			cout << m_numero << ",R" << endl; // Right
 			
 		}
 	}
@@ -649,7 +636,7 @@ void Trackers::counting(Box *t_first, Box *t_last)
 			t_last->bbox.y + t_last->bbox.height / 2 < m_middlePoint)
 		{
 			m_leftCounter++;
-			cout << m_numero << ",T" << endl;
+			cout << m_numero << ",T" << endl; // Top
 		}
 
 		if (t_first->bbox.y + t_first->bbox.height / 2 < m_middlePoint
@@ -657,13 +644,16 @@ void Trackers::counting(Box *t_first, Box *t_last)
 			t_last->bbox.y + t_last->bbox.height / 2 > m_middlePoint)
 		{
 			m_rightCounter++;
-			cout << m_numero << ",B" << endl;
+			cout << m_numero << ",B" << endl; // Bottom
 		}		
 	}
 	
 
 }
 
+/*
+Porovanie pozícií boxov.
+*/
 bool Trackers::compareBoxes(Box dBox, Box tBox, int treshold)
 {
 	int dCenter;
@@ -672,17 +662,23 @@ bool Trackers::compareBoxes(Box dBox, Box tBox, int treshold)
 	dCenter = dBox.bbox.x + dBox.bbox.width / 2;
 	tCenter = tBox.bbox.x + tBox.bbox.width / 2;
 
-	//cout << "Porovnavam: " << dCenter << " vs. " << tCenter << endl;
+	
 
 	return (abs(dCenter - tCenter) <= treshold);
 		
 }
 
+/*
+Získa hodnotu poèítania na ¾avej/spodnej strane.
+*/
 int Trackers::getLeftCounter()
 {
 	return m_leftCounter;
 }
 
+/*
+Získa hodnotu poèítania na pravej/vrchnej strane.
+*/
 int Trackers::getRightCounter()
 {
 	return m_rightCounter;

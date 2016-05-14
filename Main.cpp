@@ -1,14 +1,14 @@
+/*
+ * Poèítání prùchodù osob dveømi s využitím stacionární kamery
+ * Bakalárska práca, 2016
+ * ¼uboš Tichý, xtichy23
+ * Main.cpp
+ */
+
 #include <iostream>
-//#include "src\Cascade_BackgroundSubtraction\VJ_BS.h"
-//#include "src\Cascade\CC.h"
-//#include "src\HoughTransform\HT.h"
-#include "Main.hpp"
 #include <opencv2\opencv.hpp>
-//#include "src\OpenTLD\OpenTLD.h"
+#include "Main.hpp"
 #include "src\Box.h"
-//#include "src\BackgroundSubtraction\BS.h"
-//#include "src\CompressiveTracking\RunCT.h"
-//#include "src\Kernelized_Correlation_Filters\KCF.h"
 #include "src\Detectors.hpp"
 #include "src\Trackers.hpp"
 
@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 		loadConfig(argv);
 		//countingThresh = stoi(argv[2]);
 		//compareThresh = stoi(argv[3]);
+		
 	}
 	else
 	{
@@ -38,7 +39,7 @@ int main(int argc, char** argv)
 	}
 
 
-	//	printConfig();
+	printConfig();
 
 	cout << "Counting..." << endl;
 	cout << "============================================================" << endl;
@@ -47,17 +48,21 @@ int main(int argc, char** argv)
 
 	cout << "============================================================" << endl;
 	cout << "Counting is done." << endl;
-	//cout << "Press enter..." << endl;
-	//getchar();
+
 	return EXIT_SUCCESS;
 }
 
+/* 
+Vytlaèí pomocníka na obrazovku. 
+*/
 void printHelp()
 {
 	cout << "Run as: bp.exe [config file]" << endl;
 }
 
-
+/* 
+Hlavný cyklus poèítania. 
+*/
 void doWork()
 {
 	int frameCounter = 0;
@@ -73,21 +78,11 @@ void doWork()
 		minHeightBox, maxHeightBox,
 		cascadeClassifier);
 
-	//string filename = getFileName();
-
 	Trackers *trackers = new Trackers(
 		typeOfTracker, typeOfLine,
 		leftPoint, middlePoint, rightPoint);
 
-	/*
-	Trackers *trackers = new Trackers(
-		typeOfTracker, typeOfLine,
-		leftPoint, middlePoint, rightPoint,
-		filename, countingThresh, compareThresh);
-		*/
 
-
-	//vector <Box> boxes;
 	BackgroundSubtractorMOG2 *pMOG2;
 	
 	unsigned int leftCounter = 0;
@@ -114,7 +109,7 @@ void doWork()
 	// hlavny cyklus 
 	while (1)
 	{
-		//SetConsoleCursorPosition(h, bufferInfo.dwCursorPosition);
+		
 		frameCounter++;
 
 
@@ -127,12 +122,12 @@ void doWork()
 		}
 
 
-		//cvtColor(frame, gray, CV_RGB2GRAY);
+		
 		pMOG2->operator()(frame, fgmask, -1);
 		
 
 		detectors->detect(frame, fgmask, frameCounter);
-		//boxes = ;
+		
 		trackers->track(detectors->getBoxes(), frame, frameCounter);
 		
 
@@ -175,18 +170,7 @@ void doWork()
 			break;
 		}
 			
-		
 
-		///// debugging
-		
-		
-
-		/*
-		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/bw/%d.png", rawname.c_str(), frameCounter);
-		//cout << filename << endl;
-		imwrite(filename, fgmask);
-		*/
-		/////
 
 		switch (typeOfLine)
 		{
@@ -223,37 +207,39 @@ void doWork()
 		}
 		
 		/*
-		string rawname = "vratnica";
+		string rawname = "doc";
 		char filename[280];
 		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/rgb/%d.png", rawname.c_str(), frameCounter);
 
 		imwrite(filename, frame);
-		*/
-		/*
+
+		
+		sprintf(filename, "C:/Users/Lenovo/Documents/Visual Studio 2013/Projects/bp/Release/outputs/%s/bw/%d.png", rawname.c_str(), frameCounter);
+
+		imwrite(filename, fgmask);
+		
+		
 		imshow("People passing through a door counter", frame);
 		waitKey(1);
 		*/
+		
 		frame.release();
 
 	}
 	cout << frameCounter << endl;
 }
 
-
+/*
+Naèíta konfiguraèný súbor,
+*/
 void loadConfig(char** argv)
 {	
 	//int leftPoint, rightPoint, middlePoint;
 	string line;
 	int result, size;
 
-	/*
-	config.ok = true;
-	config.mode = 0;
-	config.detector = 0;
-	config.tracker = 0;
-	config.source = "";
-	*/
-	cout << "Loading config file..." << endl;
+	
+	cout << "Loading a config file..." << endl;
 
 
 	ifstream file(argv[1]);
@@ -284,15 +270,7 @@ void loadConfig(char** argv)
 	else if (!line.compare("CASCADE"))
 	{
 		typeOfDetector = CASCADE;
-	}
-	else if (!line.compare("HOUGH_TRANSFORM"))
-	{
-		typeOfDetector = HOUGH_TRANSFORM;
-	}
-	else if (!line.compare("MOVEMENT_HOUGH_TRANSFORM"))
-	{
-		typeOfDetector = MOVEMENT_HOUGH_TRANSFORM;
-	}
+	}	
 	else if (!line.compare("C4"))
 	{
 		typeOfDetector = C4;
@@ -450,13 +428,7 @@ void printConfig()
 		break;
 	case MOVEMENT_CASCADE:
 		cout << "Movement detection with cascade - " << cascadeClassifier << endl;
-		break;
-	case HOUGH_TRANSFORM:
-		cout << "Hough transform" << endl;
-		break;
-	case MOVEMENT_HOUGH_TRANSFORM:
-		cout << "Hough transform with movement detection" << endl;
-		break;
+		break;	
 	}
 
 	cout << "Tracking: \t";
@@ -477,6 +449,7 @@ void printConfig()
 	cout << "=====================================================" << endl;
 }
 
+/* 
 string getFileName()
 {
 	string detector, tracker;
@@ -493,15 +466,7 @@ string getFileName()
 		//cout << "Movement detection with cascade - " << cascadeClassifier << endl;
 		detector = "Movement detection with cascade";
 		break;
-		/*
-	case HOUGH_TRANSFORM:
-		cout << "Hough transform" << endl;
-		break;
-		
-	case MOVEMENT_HOUGH_TRANSFORM:
-		cout << "Hough transform with movement detection" << endl;
-		break;
-		*/
+	
 	case C4:
 		detector = "C4";
 		break;
@@ -531,3 +496,4 @@ string getFileName()
 	cout << filename << '\n';
 	return filename;
 }
+*/

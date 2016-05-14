@@ -1,60 +1,40 @@
+/*
+ * PoËÌt·nÌ pr˘chod˘ osob dve¯mi s vyuûitÌm stacion·rnÌ kamery
+ * Bakal·rska pr·ca, 2016
+ * ºuboö Tich˝, xtichy23
+ * Detectors.hpp
+ */
+
 #ifndef DETECTORS
 #define DETECTORS
 
 #include <opencv2\opencv.hpp>
-//#include "Box.h"
-#include "HoughTransform\DenseGreedyDetection\GreedyDetection.h"
+#include "Box.h"
 #include "C4_detector\Pedestrian.h"
 
 class Detectors
 {
 public:		
+	/* Konötruktor detektorov */
 	Detectors(
 		int t_typeOfDetector, int t_typeOfLine,
 		int t_leftPoint, int t_middlePoint, int t_rightPoint,
 		int t_minWidthBox, int t_maxWidthBox,
 		int t_minHeightBox, int t_maxHeightBox,
 		std::string t_cascadeClassifier);
+	/* Deötruktor detektorov. */
 	~Detectors();
+
+	/* MetÛda urËÌ pouûitie zvolenej detekcie. */
 	void detect(cv::Mat t_RGBFrame, cv::Mat t_BWFrame, int t_numero);
+
+	/* ZÌska bounding boxy detekcie. */
 	std::vector<Box> getBoxes();
 	
 private:
 
-	/* size of patch in a forest */
-	int PatchSize = 16;
-	/* only patches with probabilities to belong to background lower than this threshold can vote */
-	double PatchBgThreshold = 0.7;
-	/* minimal allowed probability of a patch to belong to object, if probability is lesser the vote is ignored */
-	double ProbVoteThreshold = 0.00005;
-	/* width of a bounding box at each scale corresponding to detection */
-	int BBoxWidth;
-	/* height of a bounding box at each scale corresponding to detection */
-	int BBoxHeight;
-	/* number of scales for multi - scale detection */
-	int iNumberOfScales = 3;
-	/* half of maximum width of object in the data used for training the forest */
-	float HalfBBoxWidth;
-	/* half of maximum height of object in the data used for training the forest */
-	float HalfBBoxHeight;
-	/* radius of blur for hough images */
-	float blur_radius = 5;
-	/* size of images at subsequent scales differ by coefficient */
-	float ResizeCoef = 0.85;
-	/* bias of background cost, parameter of detection algorithm */
-	float bg_bias = 8.5;
-	/* penalty for adding a hypothesis, parameter of detection algorithm */
-	float hyp_penalty = 1500;
-	/* maximum number of objects in an image */
-	float MaxObjectsCount = 3;
-	/* resize images before detection by this coefficient */
-	double koef = 0.647;
-
-	std::string forest_path = "pedestrian.dat";
-
-	CGreedyDetection gd;
-
-	DetectionScanner m_ds;
+	
+	
 
 	/* detekcia zalozena len pohybe */
 	const int MOVEMENT = 1;
@@ -71,45 +51,91 @@ private:
 	/* detektor s vyuzitim Houghovej transformacie a s vyuzitim pohybu */
 	const int MOVEMENT_HOUGH_TRANSFORM = 5;
 
+	/* detektor metÛdy C4 */
 	const int C4 = 6;
+
+	/* detektor metÛdy C4 v mieste pohybu  */
 	const int MOVEMENT_C4 = 7;
 
+	/* vertik·lna orient·cia oblasti z·ujmu */
 	const int VERTICAL = 1;
-	const int HORIZONTAL = 2;
 
+	/* horizont·lna orient·cia oblasti z·ujmu */
+	const int HORIZONTAL = 2;
+	
 	const int  DETECTOR = 1;
 	const int  TRACKER = 2;
 	const int  COUNTER = 3;
 
+	/* bounding boxy detekcie */
 	std::vector<Box> m_boxes;
+
+	/* kask·dy */
 	cv::CascadeClassifier m_cascadeClassifier;
+
+	/* Ëiernobiela snÌmka */
 	cv::Mat m_BWframe;
+
+	/* farebn· snÌmka */
 	cv::Mat m_RGBframe;
+
+	/* poradovÈ ËÌslo snÌmky */
 	int m_numero;
+
+	/* typ detekcie */
 	int m_typeOfDetector;
+
+	/* Ëiary oblasti z·umu */
 	int m_line, m_left, m_middle, m_right;
+
+	/* minim·lna a maxim·lna öÌrka osoby */
 	int m_minWidth, m_maxWidth;
+
+	/* minim·lna a maxim·lna v˝öka osoby */
 	int m_minHeight, m_maxHeight;
 
+	/* MetÛda detekcie pohybu. */
 	void detectMovement();
+
+	/* HOG detekcia v mieste pohybu. */
 	void detectMovementCascade();
+
+	/* HOG detekcia. */
 	void detectCascade();
-	//void detectHT();
-	//void detectMovementHT();
+
+	/* Detektor C4 */
+	DetectionScanner m_ds;
+
+	/* MMetÛda detekcie C4. */
 	void detectC4();
+
+	/* MetÛda detekcie C4 v mieste pohybu. */
 	void detectMovementC4();
+
+	/* NastavÌ snÌmky a aktu·lne poradovÈ ËÌslo snÌmky. */
 	void setFrames(cv::Mat t_RGBFrame, cv::Mat t_BWFrame, int t_numero);
+	
+	/* NaËÌta kask·dy pre HOG. */	
 	void loadCascadeClassifier(std::string t_cascadeClassifier);
+
+	/* NaËÌta kask·dy pre metÛdu C4. */
 	void loadCascade(DetectionScanner& ds);
 	
+	/*  ZÌska miesta pohybu. */
 	std::vector<cv::Rect> getBoundRects();
+	
+	/* Testuje, Ëi sa bounding box nach·dza v oblasti z·ujmu. */
 	bool isInArea(cv::Rect);
+
+	/* Testuje, Ëi m· bounding box detekcie adekv·tnu veækosù. */
 	bool isGoodSize(cv::Rect);
+
+	/* ZmenöÌ veækosù bounding boxu o dan˝ koeficient. */
 	void decreaseRect(cv::Rect *t_bigRect, float t_coefWidth, float t_coefHeight);
+
+	/* Zv‰ËöÌ veækosù bounding boxu o dan˝ koeficient. */
 	void enlargeRect(cv::Rect *t_littleRect, int t_coefWidth, int t_coefHeight);
 	
-	cv::Rect m_area;
-	void setArea();
 };
 
 

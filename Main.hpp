@@ -1,3 +1,10 @@
+/*
+ * Poèítání prùchodù osob dveømi s využitím stacionární kamery
+ * Bakalárska práca, 2016
+ * ¼uboš Tichý, xtichy23
+ * Main.hpp
+ */
+
 #ifndef MAIN
 #define MAIN
 
@@ -42,8 +49,9 @@ const int CASCADE = 3;
 const int HOUGH_TRANSFORM = 4;
 
 /* detektor s vyuzitim Houghovej transformacie a s vyuzitim pohybu */
-const int MOVEMENT_HOUGH_TRANSFORM = 5;
+//const int MOVEMENT_HOUGH_TRANSFORM = 5;
 
+/*detektor metodou C4 */
 const int C4 = 6;
 
 const int MOVEMENT_C4 = 7;
@@ -64,14 +72,15 @@ void printHelp();
 void loadConfig(char**);
 
 /* vypise nastavenia */
-void printConfig(struct Config);
+void printConfig();
 
 /* samotny proces pocitania */
 void doWork();
 
-//int runMain(int argc, char** argv);
 
-std::string getFileName();
+//std::string getFileName();
+
 int countingThresh, compareThresh;
+
 
 #endif
